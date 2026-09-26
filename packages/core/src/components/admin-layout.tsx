@@ -3,6 +3,7 @@ import type { AdminLayoutProps } from "../types";
 import SideBar from "./sidebar";
 import { CommandSearch, CommandSearchProvider } from "./ui/command-search";
 import WorkspaceTabs from "./workspace-tabs";
+import RouteProgressBar from "./ui/route-progress-bar";
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   title = "Sent",
@@ -19,10 +20,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   commandGroups,
   commandItems,
   enableTabs = true,
+  enableProgressBar = false,
   children,
 }) => {
   return (
     <CommandSearchProvider>
+      {enableProgressBar && <RouteProgressBar />}
       <div className="flex h-svh w-full max-w-full overflow-hidden bg-background text-foreground">
         {sidebar ? (
           sidebar

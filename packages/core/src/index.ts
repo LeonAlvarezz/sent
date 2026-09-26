@@ -181,4 +181,14 @@ export type {
   CollapsibleContentProps,
   CollapsibleContextValue,
 } from "./components/ui/collapsible";
+export {
+  default as RouteProgressBar,
+  RouteProgressBar as CoreRouteProgressBar,
+} from "./components/ui/route-progress-bar";
+export type { RouteProgressBarProps } from "./components/ui/route-progress-bar";
+export {
+  default as PageLoadingSkeleton,
+  PageLoadingSkeleton as CorePageLoadingSkeleton,
+} from "./components/ui/page-loading-skeleton";
+export type { PageLoadingSkeletonProps } from "./components/ui/page-loading-skeleton";
 export * from "./utils";

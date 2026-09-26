@@ -76,6 +76,7 @@ export interface AdminLayoutProps {
   commandGroups?: CommandGroup[];
   commandItems?: CommandItem[];
   enableTabs?: boolean;
+  enableProgressBar?: boolean;
   children: React.ReactNode;
 }
 

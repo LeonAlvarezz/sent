@@ -5,7 +5,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import type { AuthContextValue } from "@z3/admin-core";
-import { AdminLayout, ErrorState, NotFound, useAuth } from "@z3/admin-core";
+import { AdminLayout, ErrorState, NotFound, RouteProgressBar, useAuth } from "@z3/admin-core";
 import { navGroups } from "../config/navigation";
 
 export interface RouterContext {
@@ -19,7 +19,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <>
+      <RouteProgressBar />
+      <Outlet />
+    </>
+  );
 }
 
 function RootNotFound() {

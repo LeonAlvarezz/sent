@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Combobox,
   ComboboxInput,
@@ -182,6 +182,7 @@ export const WorkspaceTabItem: React.FC<WorkspaceTabItemProps> = ({
   tab,
   className,
 }) => {
+  const router = useRouter();
   const {
     openTabs,
     pathname,
@@ -194,6 +195,11 @@ export const WorkspaceTabItem: React.FC<WorkspaceTabItemProps> = ({
   return (
     <div
       onClick={() => handleTabClick(tab.path)}
+      onMouseEnter={() => {
+        if (!isActive) {
+          router.preloadRoute({ to: tab.path as any }).catch(() => {});
+        }
+      }}
       onContextMenu={(e) => openContextMenu(e, tab.path)}
       className={cn(
         "group relative flex items-center gap-2 min-h-9 py-2 pl-3 pr-2 text-xs font-medium cursor-pointer transition-all rounded-t-lg shrink-0 select-none",
@@ -259,6 +265,7 @@ export interface WorkspaceTabDropdownProps {
 export const WorkspaceTabDropdown: React.FC<WorkspaceTabDropdownProps> = ({
   className,
 }) => {
+  const router = useRouter();
   const { openTabs, pathname, handleTabClick, handleCloseTab } =
     useWorkspaceTabsContext();
   const [dropdownSearch, setDropdownSearch] = useState("");
@@ -339,6 +346,11 @@ export const WorkspaceTabDropdown: React.FC<WorkspaceTabDropdownProps> = ({
                       <ComboboxOption
                         key={t.id}
                         value={t}
+                        onMouseEnter={() => {
+                          if (t.path !== pathname) {
+                            router.preloadRoute({ to: t.path as any }).catch(() => {});
+                          }
+                        }}
                         className={cn(
                           "group/option px-2.5 py-1.5 text-xs rounded-md flex items-center justify-between cursor-pointer transition-colors select-none data-focus:bg-accent data-focus:text-accent-foreground",
                           isActive
