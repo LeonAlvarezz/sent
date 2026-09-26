@@ -1,0 +1,21 @@
+{
+  "name": "@z3/types",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "exports": {
+    ".": "./index.ts",
+    "./*": "./*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "valibot": "^1.4.2"
+  },
+  "devDependencies": {
+    "@z3/typescript-config": "workspace:*",
+    "better-auth": "^1.7.1",
+    "typescript": "5.9.2"
+  }
+}

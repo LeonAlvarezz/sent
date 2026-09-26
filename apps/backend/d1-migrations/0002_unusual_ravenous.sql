@@ -1,0 +1,41 @@
+CREATE TABLE `campaign` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`user_id` text NOT NULL,
+	`list_id` integer NOT NULL,
+	`sender_id` integer NOT NULL,
+	`pitch_profile_id` integer,
+	`name` text NOT NULL,
+	`subject` text NOT NULL,
+	`body` text NOT NULL,
+	`status` text DEFAULT 'queued' NOT NULL,
+	`delay_min_seconds` integer DEFAULT 15 NOT NULL,
+	`delay_max_seconds` integer DEFAULT 45 NOT NULL,
+	`total_count` integer DEFAULT 0 NOT NULL,
+	`sent_count` integer DEFAULT 0 NOT NULL,
+	`failed_count` integer DEFAULT 0 NOT NULL,
+	`started_at` integer,
+	`completed_at` integer,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
+	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`list_id`) REFERENCES `email_list`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`sender_id`) REFERENCES `sender_identity`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`pitch_profile_id`) REFERENCES `pitch_profile`(`id`) ON UPDATE no action ON DELETE set null
+);
+--> statement-breakpoint
+CREATE TABLE `campaign_queue` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`campaign_id` integer NOT NULL,
+	`email_id` integer,
+	`recipient_email` text NOT NULL,
+	`recipient_name` text,
+	`rendered_subject` text NOT NULL,
+	`rendered_body` text NOT NULL,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`error_message` text,
+	`retry_count` integer DEFAULT 0 NOT NULL,
+	`sent_at` integer,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`campaign_id`) REFERENCES `campaign`(`id`) ON UPDATE no action ON DELETE cascade,
+	FOREIGN KEY (`email_id`) REFERENCES `email`(`id`) ON UPDATE no action ON DELETE set null
+);
