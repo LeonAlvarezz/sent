@@ -13,8 +13,9 @@
     "db:migrate:local": "wrangler d1 migrations apply sent-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply sent-db --remote",
     "db:seed": "bun run src/db/seed.ts",
-    "db:seed:remote": "wrangler d1 execute sent-db --remote --file=src/db/seed.sql",
-    "db:reset": "rm -rf .wrangler/state/v3/d1 && bun run db:migrate:local && bun run db:seed"
+    "db:seed:remote": "bun run src/db/seed.ts --remote",
+    "db:reset": "bun run src/db/reset.ts",
+    "db:reset:remote": "bun run src/db/reset.ts --remote"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260919.1",

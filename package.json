@@ -8,14 +8,16 @@
     "dev:backend": "bun --cwd apps/backend dev",
     "dev:frontend": "bun --cwd apps/starter dev",
     "lint": "turbo run lint",
-    "test": "bun test",
+    "test": "bun test apps/backend/test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "db:migrate": "bun --cwd apps/backend db:migrate",
     "db:migrate:remote": "bun --cwd apps/backend db:migrate:remote",
     "db:push": "bun --cwd apps/backend db:push",
     "db:reset": "bun --cwd apps/backend db:reset",
+    "db:reset:remote": "bun --cwd apps/backend db:reset:remote",
     "db:seed": "bun --cwd apps/backend db:seed",
+    "db:seed:remote": "bun --cwd apps/backend db:seed:remote",
     "db:gen": "bun --cwd apps/backend db:gen"
   },
   "devDependencies": {
