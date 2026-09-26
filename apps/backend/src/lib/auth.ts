@@ -15,7 +15,11 @@ export const createAuth = (db: Database, trustedOrigins?: string[]) =>
     emailAndPassword: {
       enabled: true,
     },
-    trustedOrigins: trustedOrigins || ["http://localhost:5173"],
+    trustedOrigins: trustedOrigins || [
+      "http://localhost:5173",
+      "https://sent-admin-cts.pages.dev",
+      "https://sent.eurasietravel.com",
+    ],
     plugins: [
       twoFactor(),
       adminPlugin({

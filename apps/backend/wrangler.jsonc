@@ -15,8 +15,8 @@
   "vars": {
     "CORS_ORIGINS": [
       "http://localhost:5173",
-      "http://sent-admin-cts.pages.dev",
-      "http://sent.eurasietravel.com",
+      "https://sent-admin-cts.pages.dev",
+      "https://sent.eurasietravel.com",
     ],
     "OPENAI_API_KEY": "",
   },
