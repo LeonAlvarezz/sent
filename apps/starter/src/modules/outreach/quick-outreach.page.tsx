@@ -36,7 +36,7 @@ const FOLLOW_UP_OPTIONS = [
 ];
 
 export function QuickOutreachPage() {
-  const searchParams = useSearch({ strict: false }) as { targetUrl?: string };
+  const searchParams = useSearch({ strict: false });
 
   // Scraped page context & discovered email candidates
   const [scrapedTitle, setScrapedTitle] = useState("");
@@ -67,9 +67,7 @@ export function QuickOutreachPage() {
   useEffect(() => {
     if (senders && senders.length > 0 && !selectedSenderId) {
       const defaultSender = senders.find((s) => s.isDefault) || senders[0];
-      if (defaultSender) {
-        setSelectedSenderId(defaultSender.id);
-      }
+      setSelectedSenderId(defaultSender.id);
     }
   }, [senders, selectedSenderId]);
 
@@ -163,7 +161,7 @@ export function QuickOutreachPage() {
       });
       setScrapedTitle(result.title || "");
       setPageContext(result.textSnippet || result.description || "");
-      const emails = result.candidateEmails || [];
+      const emails = result.candidateEmails;
       setCandidateEmails(emails);
 
       if (emails.length > 0 && !form.getFieldValue("recipientEmail")) {
@@ -177,9 +175,9 @@ export function QuickOutreachPage() {
       const hasEmails = emails.length > 0;
 
       const hasContent = Boolean(
-        result.title?.trim() ||
-        result.textSnippet?.trim() ||
-        result.description?.trim(),
+        result.title.trim() ||
+        result.textSnippet.trim() ||
+        result.description.trim(),
       );
 
       if (!hasEmails && !hasContent) {
@@ -189,11 +187,11 @@ export function QuickOutreachPage() {
         );
       } else if (hasEmails && hasContent) {
         toast.success(
-          `Found ${result.candidateEmails.length} email(s) and extracted page context`,
+          `Found ${emails.length} email(s) and extracted page context`,
         );
       } else if (hasEmails) {
         toast.success(
-          `Found ${result.candidateEmails.length} email(s) on target page`,
+          `Found ${emails.length} email(s) on target page`,
         );
       } else {
         toast.info(

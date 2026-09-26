@@ -25,8 +25,6 @@ export class MockHttpError extends Error {
 
 export function resetMockState() {
   mockUsers = [...SAMPLE_USERS];
-  mockProducts = [...SAMPLE_PRODUCTS];
-  mockOrders = [...SAMPLE_ORDERS];
   currentSessionUser = { ...SAMPLE_USERS[1] };
 }
 
