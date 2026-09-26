@@ -157,7 +157,7 @@ export async function handleMockRequest<T = any>(
     const res: EnableTwoFactorResponse = {
       method: "totp",
       totpURI:
-        "otpauth://totp/ZeroUI%20Admin:admin%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=ZeroUI%20Admin",
+        "otpauth://totp/Sent%20Admin:admin%40example.com?secret=JBSWY3DPEHPK3PXP&issuer=Sent%20Admin",
       backupCodes: ["8f4b-2e9a", "3c7d-1a5b", "9e2f-6d4c", "4a1b-7c8d"],
     };
     return res;

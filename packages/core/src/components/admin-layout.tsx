@@ -5,7 +5,7 @@ import { CommandSearch, CommandSearchProvider } from "./ui/command-search";
 import WorkspaceTabs from "./workspace-tabs";
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
-  title = "ZeroUI",
+  title = "Sent",
   logo,
   navGroups,
   navItems,

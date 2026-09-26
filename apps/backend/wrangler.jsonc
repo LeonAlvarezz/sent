@@ -1,21 +1,23 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "sent-backend",
-	"main": "src/index.ts",
-	"compatibility_date": "2024-09-23",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "sent-db",
-			"database_id": "9eddbb36-cc20-4845-afbd-8a2fa1c75d73",
-			"migrations_dir": "d1-migrations"
-		}
-	],
-	"vars": {
-		"CORS_ORIGINS": "http://localhost:5173",
-		"OPENAI_API_KEY": ""
-	}
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sent-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sent-db",
+      "database_id": "9eddbb36-cc20-4845-afbd-8a2fa1c75d73",
+      "migrations_dir": "d1-migrations",
+    },
+  ],
+  "vars": {
+    "CORS_ORIGINS": [
+      "http://localhost:5173",
+      "http://sent-admin-cts.pages.dev",
+      "http://sent.eurasietravel.com",
+    ],
+    "OPENAI_API_KEY": "",
+  },
 }

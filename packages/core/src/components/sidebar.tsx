@@ -48,7 +48,7 @@ export function useSidebarContext() {
 }
 
 function SideBarHeader({
-  title = "ZeroUI",
+  title = "Sent",
   logo,
   children,
   className,
@@ -203,7 +203,7 @@ function SideBarFooter({
 }
 
 function SideBarUserMenu({
-  user = { name: "Leon", email: "leon@zeroui.com" },
+  user = { name: "Leon", email: "leon@sent.com" },
   menuItems = [],
   onSignOut,
   className,
@@ -284,7 +284,7 @@ function SideBarUserMenu({
 }
 
 function SideBarRoot({
-  title = "ZeroUI",
+  title = "Sent",
   logo,
   navGroups,
   navItems,

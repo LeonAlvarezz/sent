@@ -15,7 +15,7 @@ function DashboardPage() {
           Dashboard Overview
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Welcome to ZeroUI Admin layout powered by <code>@z3/admin-core</code> and
+          Welcome to Sent Admin layout powered by <code>@z3/admin-core</code> and
           TanStack Router file-based routing!
         </p>
       </div>

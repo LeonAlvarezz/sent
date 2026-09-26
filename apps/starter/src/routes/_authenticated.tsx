@@ -56,7 +56,7 @@ function AuthenticatedLayout() {
 
   return (
     <AdminLayout
-      title="ZeroUI Admin"
+      title="Sent Admin"
       navGroups={navGroups}
       user={user ?? undefined}
       onSignOut={logout}

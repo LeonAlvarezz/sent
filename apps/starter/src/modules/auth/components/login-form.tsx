@@ -216,7 +216,7 @@ export function LoginForm() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          Sign in to ZeroUI Admin
+          Sign in to Sent Admin
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Enter your credentials to access the admin portal

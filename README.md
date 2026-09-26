@@ -116,11 +116,11 @@ import { navGroups } from "./config/navigation";
 export default function App() {
   return (
     <AdminLayout
-      title="ZeroUI Admin"
+      title="Sent Admin"
       navGroups={navGroups}
       user={{
         name: "Leon Alvarez",
-        email: "leon@zeroui.com",
+        email: "leon@sent.com",
       }}
       onSignOut={() => alert("Signed out successfully!")}
     >

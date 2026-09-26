@@ -115,7 +115,7 @@ const options: swaggerJSDoc.Options = {
             issuer: {
               type: "string",
               description: "Custom issuer name for the TOTP URI.",
-              example: "Zero Admin",
+              example: "Sent Admin",
             },
           },
         },
@@ -132,7 +132,7 @@ const options: swaggerJSDoc.Options = {
               nullable: true,
               description: "TOTP URI for generating QR code in authenticator apps.",
               example:
-                "otpauth://totp/Zero%20Admin:admin@admin.com?secret=JBSWY3DPEHPK3PXP&issuer=Zero%20Admin",
+                "otpauth://totp/Sent%20Admin:admin@admin.com?secret=JBSWY3DPEHPK3PXP&issuer=Sent%20Admin",
             },
             backupCodes: {
               type: "array",
