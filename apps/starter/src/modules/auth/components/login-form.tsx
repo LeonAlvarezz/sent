@@ -39,8 +39,8 @@ export function LoginForm() {
 
   const form = useForm({
     defaultValues: {
-      email: "admin@example.com",
-      password: "12345678",
+      email: "",
+      password: "",
       rememberMe: false,
     },
     validators: {
