@@ -231,6 +231,15 @@ export const GenerateDraftSchema = v.object({
 
 export type GenerateDraft = v.InferOutput<typeof GenerateDraftSchema>;
 
+export const GeneratedDraftSchema = v.object({
+  subject: v.string(),
+  body: v.string(),
+  isFallback: v.boolean(),
+  fallbackReason: v.optional(v.string()),
+});
+
+export type GeneratedDraft = v.InferOutput<typeof GeneratedDraftSchema>;
+
 export const DispatchOutreachSchema = v.object({
   senderId: v.pipe(v.number(), v.integer()),
   recipientEmail: v.pipe(v.string(), v.email("Valid email required")),

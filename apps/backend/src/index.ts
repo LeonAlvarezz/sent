@@ -46,6 +46,7 @@ app.onError((err, c) => {
 app.get("/health-check", (c) => {
   return c.json({
     status: "OK",
+    aiConfigured: Boolean(c.env?.OPENAI_API_KEY?.trim()),
     uptime: process.uptime ? process.uptime() : 0,
     date: new Date().toISOString(),
   });

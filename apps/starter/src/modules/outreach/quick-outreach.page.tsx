@@ -235,7 +235,15 @@ export function QuickOutreachPage() {
       const label = toneModifier
         ? toneLabelMap[toneModifier] || toneModifier
         : "Standard";
-      toast.success(`${label} draft generated successfully`);
+
+      if (draft.isFallback) {
+        toast.warning(
+          `AI is not properly configured (${draft.fallbackReason || "missing API key"}). Using template fallback.`,
+          { duration: 6000 },
+        );
+      } else {
+        toast.success(`${label} draft generated with AI!`);
+      }
     } catch (err: any) {
       toast.error(err.message || "Draft generation failed");
     } finally {

@@ -13,6 +13,7 @@ import type {
   CreateSenderIdentity,
   DispatchOutreach,
   GenerateDraft,
+  GeneratedDraft,
   ImportEmailsPayload,
   JobTitleItem,
   OutreachLog,
@@ -29,6 +30,7 @@ export const OUTREACH_KEYS = {
   pitchProfiles: () => [...OUTREACH_KEYS.all, "pitch-profiles"] as const,
   lists: () => [...OUTREACH_KEYS.all, "lists"] as const,
   jobTitles: () => [...OUTREACH_KEYS.all, "job-titles"] as const,
+  aiStatus: () => [...OUTREACH_KEYS.all, "ai-status"] as const,
   emails: (params?: { listId?: number; search?: string; limit?: number; title?: string }) =>
     params !== undefined
       ? ([...OUTREACH_KEYS.all, "emails", params] as const)
@@ -235,7 +237,18 @@ export function useScrapeUrlMutation() {
 export function useGenerateDraftMutation() {
   return useMutation({
     mutationFn: (data: GenerateDraft) =>
-      apiClient.post<{ subject: string; body: string }>("/outreach/generate", data),
+      apiClient.post<GeneratedDraft>("/outreach/generate", data),
+  });
+}
+
+export function useAiStatusQuery() {
+  return useQuery({
+    queryKey: OUTREACH_KEYS.aiStatus(),
+    queryFn: () =>
+      apiClient.get<{ isConfigured: boolean; source: "env" | "db" | "none" }>(
+        "/outreach/ai-status",
+      ),
+    staleTime: 60000,
   });
 }
 

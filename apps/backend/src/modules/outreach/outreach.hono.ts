@@ -261,6 +261,22 @@ outreachRouter.put("/emails/:id", handleUpdateEmail);
 outreachRouter.delete("/emails/:id", handleDeleteEmail);
 
 // --- SCRAPE, GENERATE, DISPATCH ---
+outreachRouter.get("/ai-status", async (c) => {
+  const user = c.get("user");
+  const { repo } = getServices(c.env.DB);
+  const settings = await repo.getSettings(user.id);
+  const hasEnvKey = Boolean(c.env?.OPENAI_API_KEY?.trim());
+  const hasDbKey = Boolean(settings?.openaiApiKey?.trim());
+
+  return c.json({
+    success: true,
+    data: {
+      isConfigured: hasEnvKey || hasDbKey,
+      source: hasEnvKey ? "env" : hasDbKey ? "db" : "none",
+    },
+  });
+});
+
 outreachRouter.post("/scrape", async (c) => {
   const body = await c.req.json();
   const payload = v.parse(ScrapeUrlSchema, body);

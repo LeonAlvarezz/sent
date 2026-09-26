@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { OutreachRepository } from "./outreach.repository";
-import type { GenerateDraft } from "@z3/types";
+import type { GenerateDraft, GeneratedDraft } from "@z3/types";
 
 export class GeneratorService {
   constructor(private readonly repo: OutreachRepository) {}
@@ -9,7 +9,7 @@ export class GeneratorService {
     payload: GenerateDraft,
     userId: string,
     apiKeyOverride?: string,
-  ): Promise<{ subject: string; body: string }> {
+  ): Promise<GeneratedDraft> {
     const pitchProfile = payload.pitchProfileId
       ? await this.repo.getPitchProfileById(payload.pitchProfileId, userId)
       : null;
@@ -53,6 +53,8 @@ export class GeneratorService {
         ? process.env.OPENAI_API_KEY.trim()
         : undefined);
 
+    let fallbackReason: string | undefined;
+
     if (apiKey) {
       try {
         const client = new OpenAI({ apiKey });
@@ -76,7 +78,7 @@ You MUST structure the email body strictly with the following sections:
    - Keep the compliment authentic, professional, and natural.
 4. Sender introduction: State that you're reaching out from ${companyName} (${companyUrl}), describing what the company does (${companyDesc}).
 5. Partnership proposal & collaboration formats: State "We’d love to explore a paid partnership or content collaboration with ${siteName}. We are interested in exploring the following collaboration formats:" followed by 3 numbered formats:
-   1. Link Placement / Insertion: Adding a relevant contextual backlink or helpful resource to one of their existing high-ranking ${topic} destination guides pointing to our custom itineraries or regional travel planning hubs.
+   1. Link Placement / Insertion: Adding a relevant contextual backlink or helpful resource to one of your existing high-ranking ${topic} destination guides pointing to our custom itineraries or regional travel planning hubs.
    2. Sponsored Article / Destination Feature: Sponsoring a dedicated post written by them, or providing a fully researched piece matching their editorial standards (e.g., logistics for multi-country crossings, off-the-beaten-track travel in the region).
    3. Tour Operator Spotlight: Featuring ${companyName} in any upcoming guided tour / tour operator recommendation roundups for Southeast Asia.
 6. Call to Action: "Could you please share your current media kit, rate card, and guidelines for link placements and sponsored collaborations?"
@@ -119,16 +121,21 @@ Output strictly valid JSON with keys "subject" and "body".`,
             return {
               subject: parsed.subject.trim(),
               body: parsed.body.trim(),
+              isFallback: false,
             };
           }
         }
-      } catch (err) {
+        fallbackReason = "OpenAI returned an empty response";
+      } catch (err: any) {
         console.error("OpenAI generation failed, falling back to structured templates:", err);
+        fallbackReason = err?.message || "OpenAI API request failed";
       }
+    } else {
+      fallbackReason = "OpenAI API key is not configured";
     }
 
     // Fallback generator adhering strictly to the required structure across all 5 tones
-    return this.generateFallbackDraft({
+    const fallback = this.generateFallbackDraft({
       siteName,
       recipient,
       companyName,
@@ -139,6 +146,12 @@ Output strictly valid JSON with keys "subject" and "body".`,
       customAngle: payload.customAngle,
       tone,
     });
+
+    return {
+      ...fallback,
+      isFallback: true,
+      fallbackReason,
+    };
   }
 
   private generateFallbackDraft(opts: {

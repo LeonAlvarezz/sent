@@ -19,6 +19,8 @@ describe("GeneratorService Email Generation & Tone Presets", () => {
       "test-user-1",
     );
 
+    expect(draft.isFallback).toBe(true);
+    expect(draft.fallbackReason).toContain("OpenAI API key is not configured");
     expect(draft.subject).toBe("Partnership & Content Collaboration with Little Grey Box");
     expect(draft.body).toContain("Greeting Little Grey Box,");
     expect(draft.body).toContain("I hope you’re having a great week!");
