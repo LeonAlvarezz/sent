@@ -13,14 +13,8 @@ import {
   toast,
   UploadCloudIcon,
 } from "@z3/admin-core";
-import {
-  SEO_PARTNER_STATUS,
-} from "@z3/types";
-import type {
-  CreateSeoPartner,
-  SeoPartner,
-  UpdateSeoPartner,
-} from "@z3/types";
+import { SEO_PARTNER_STATUS } from "@z3/types";
+import type { CreateSeoPartner, SeoPartner, UpdateSeoPartner } from "@z3/types";
 import {
   useCreateSeoPartnerMutation,
   useDeleteSeoPartnerMutation,
@@ -112,10 +106,9 @@ export function SeoPartnerPage() {
   };
 
   const handleStartColdOutreach = () => {
-    const firstUncontacted =
-      partners.find(
-        (p) => p.outreachStatus === SEO_PARTNER_STATUS.NOT_STARTED,
-      ) || partners[0];
+    const firstUncontacted = partners.find(
+      (p) => p.outreachStatus === SEO_PARTNER_STATUS.NOT_STARTED,
+    );
     if (!firstUncontacted) {
       toast.info("No partners found to outreach");
       return;

@@ -12,6 +12,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "db:migrate": "bun --cwd apps/backend db:migrate",
+    "db:migrate:remote": "bun --cwd apps/backend db:migrate:remote",
     "db:push": "bun --cwd apps/backend db:push",
     "db:reset": "bun --cwd apps/backend db:reset",
     "db:seed": "bun --cwd apps/backend db:seed",
