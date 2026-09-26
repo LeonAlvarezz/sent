@@ -128,7 +128,7 @@ export function RecentOutreachTable({
 
                     <td className="py-2.5 pr-3">
                       <Tag
-                        color={OutreachStatusColor[log.status] || "sky"}
+                        color={OutreachStatusColor[log.status]}
                         className="px-2 py-0.5 text-[11px]"
                       >
                         {log.status.toUpperCase()}

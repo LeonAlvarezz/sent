@@ -160,7 +160,13 @@ export function QuickOutreachPage() {
         url,
       });
       setScrapedTitle(result.title || "");
-      setPageContext(result.textSnippet || result.description || "");
+      const contextParts = [
+        result.title ? `Title: ${result.title}` : "",
+        result.h1 && result.h1 !== result.title ? `Heading: ${result.h1}` : "",
+        result.description ? `Description: ${result.description}` : "",
+        result.textSnippet ? `Content: ${result.textSnippet}` : "",
+      ].filter(Boolean);
+      setPageContext(contextParts.join("\n\n"));
       const emails = result.candidateEmails;
       setCandidateEmails(emails);
 

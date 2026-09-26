@@ -128,6 +128,37 @@ describe("GeneratorService Email Generation & Tone Presets", () => {
     const uniqueBodies = new Set(bodies);
     expect(uniqueBodies.size).toBe(5);
   });
+
+  it("personalizes contextual compliment using scraped article title and topic", async () => {
+    const draft = await generator.generateDraft(
+      {
+        targetUrl: "https://www.danflyingsolo.com/japan-rail-pass-guide",
+        recipientName: "Dan Flying Solo",
+        pageContext: "Title: Japan Rail Pass Guide: Is It Still Worth It? | Dan Flying Solo\n\nContent: Detailed analysis of the JR Pass price increases.",
+      },
+      "test-user-1",
+    );
+
+    // Must reference Japan and the scraped title, NOT hardcoded Halong Bay or creator advice
+    expect(draft.body).toContain("Japan");
+    expect(draft.body).toContain('Japan Rail Pass Guide');
+    expect(draft.body).not.toContain("Halong Bay");
+    expect(draft.body).not.toContain("transparent advice on how brands should work with creators");
+  });
+
+  it("extracts specific guide from URL slug when pageContext has no title", async () => {
+    const draft = await generator.generateDraft(
+      {
+        targetUrl: "https://www.danflyingsolo.com/cambodia-itinerary-2-weeks",
+        recipientName: "Dan Flying Solo",
+      },
+      "test-user-1",
+    );
+
+    expect(draft.body).toContain("Cambodia");
+    expect(draft.body).toContain('Cambodia Itinerary 2 Weeks');
+    expect(draft.body).not.toContain("Halong Bay");
+  });
 });
 
 describe("ScraperService Site Name Extraction", () => {

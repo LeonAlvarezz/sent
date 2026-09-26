@@ -172,14 +172,19 @@ export function SeoPartnerOutreachDrawer({
     setScrapeNoResult(false);
     setActiveTone(null);
 
-    // Auto-scrape partner page to discover emails and extract page content
     if (partner.url) {
       let isSubscribed = true;
       scrapeMutation
         .mutateAsync({ url: partner.url })
         .then((result) => {
           if (!isSubscribed) return;
-          setPageContext(result.textSnippet || result.description || "");
+          const contextParts = [
+            result.title ? `Title: ${result.title}` : "",
+            result.h1 && result.h1 !== result.title ? `Heading: ${result.h1}` : "",
+            result.description ? `Description: ${result.description}` : "",
+            result.textSnippet ? `Content: ${result.textSnippet}` : "",
+          ].filter(Boolean);
+          setPageContext(contextParts.join("\n\n"));
           const emails = result.candidateEmails;
           setCandidateEmails(emails);
 
@@ -221,7 +226,13 @@ export function SeoPartnerOutreachDrawer({
     setScrapeNoResult(false);
     try {
       const result = await scrapeMutation.mutateAsync({ url });
-      setPageContext(result.textSnippet || result.description || "");
+      const contextParts = [
+        result.title ? `Title: ${result.title}` : "",
+        result.h1 && result.h1 !== result.title ? `Heading: ${result.h1}` : "",
+        result.description ? `Description: ${result.description}` : "",
+        result.textSnippet ? `Content: ${result.textSnippet}` : "",
+      ].filter(Boolean);
+      setPageContext(contextParts.join("\n\n"));
       const emails = result.candidateEmails;
       setCandidateEmails(emails);
 

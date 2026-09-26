@@ -47,9 +47,11 @@ export class GeneratorService {
 
     const settings = await this.repo.getSettings(userId);
     const apiKey =
-      apiKeyOverride ||
-      settings?.openaiApiKey ||
-      (typeof process !== "undefined" ? process.env?.OPENAI_API_KEY : undefined);
+      (apiKeyOverride?.trim() || undefined) ||
+      (settings?.openaiApiKey?.trim() || undefined) ||
+      (typeof process !== "undefined" && process.env?.OPENAI_API_KEY?.trim()
+        ? process.env.OPENAI_API_KEY.trim()
+        : undefined);
 
     if (apiKey) {
       try {
@@ -66,11 +68,16 @@ export class GeneratorService {
 You MUST structure the email body strictly with the following sections:
 1. Greeting: "Greeting ${siteName}," (or "Hi ${recipient}," for casual tone)
 2. Warm opening line (e.g. "I hope you’re having a great week!").
-3. Contextual personalization: Mention reading their publication/blog (${siteName}), highlighting practical destination guides (e.g. ${specificGuide}) and their transparent advice for creators or high editorial standard.
+3. Contextual personalization: Write an authentic, genuine 1-2 sentence compliment referencing ${siteName}. You MUST personalize this compliment using the actual scraped Page Context and Target URL provided in the user prompt:
+   - Reference the actual article title, destination, guide topic, or photography/content focus found in the Page Context (e.g. "I’ve been reading ${siteName}, particularly your guide on [specific article/destination]...").
+   - If Page Context is general, reference their site name (${siteName}) and travel/content niche naturally.
+   - NEVER use generic placeholder text or invent topics/destinations not present in the provided context.
+   - NEVER mention "Halong Bay", "Indochina", or "advice on how brands should work with creators" unless that exact topic explicitly appears in the scraped Page Context.
+   - Keep the compliment authentic, professional, and natural.
 4. Sender introduction: State that you're reaching out from ${companyName} (${companyUrl}), describing what the company does (${companyDesc}).
 5. Partnership proposal & collaboration formats: State "We’d love to explore a paid partnership or content collaboration with ${siteName}. We are interested in exploring the following collaboration formats:" followed by 3 numbered formats:
-   1. Link Placement / Insertion: Adding a relevant contextual backlink or helpful resource to one of their existing high-ranking ${topic} destination guides (e.g., Cambodia, Vietnam, or Thailand) pointing to our custom itineraries or regional travel planning hubs.
-   2. Sponsored Article / Destination Feature: Sponsoring a dedicated post written by them, or providing a fully researched piece matching their editorial standards (e.g., logistics for multi-country Indochina crossings, off-the-beaten-track travel in the region).
+   1. Link Placement / Insertion: Adding a relevant contextual backlink or helpful resource to one of their existing high-ranking ${topic} destination guides pointing to our custom itineraries or regional travel planning hubs.
+   2. Sponsored Article / Destination Feature: Sponsoring a dedicated post written by them, or providing a fully researched piece matching their editorial standards (e.g., logistics for multi-country crossings, off-the-beaten-track travel in the region).
    3. Tour Operator Spotlight: Featuring ${companyName} in any upcoming guided tour / tour operator recommendation roundups for Southeast Asia.
 6. Call to Action: "Could you please share your current media kit, rate card, and guidelines for link placements and sponsored collaborations?"
 7. Sign-off:
@@ -94,11 +101,13 @@ Output strictly valid JSON with keys "subject" and "body".`,
               content: `Write outreach email:
 - Recipient / Site: ${recipient} (${siteName})
 - Target URL: ${payload.targetUrl || "none"}
-- Page Context: ${payload.pageContext || "practical Southeast Asia guides"}
+- Scraped Page Context: ${payload.pageContext ? payload.pageContext.slice(0, 1500) : "General travel site"}
 - Pitch Angle: ${payload.customAngle || "none"}
 - Tone: ${tone}
 - Company: ${companyName} (${companyUrl})
-- Description: ${companyDesc}`,
+- Description: ${companyDesc}
+- Detected Topic: ${topic}
+- Detected Guide: ${specificGuide || "general destination guides"}`,
             },
           ],
         });
@@ -164,6 +173,7 @@ Output strictly valid JSON with keys "subject" and "body".`,
     const angleSnippet = customAngle
       ? ` (specifically exploring ${customAngle})`
       : "";
+    const guideMention = specificGuide ? ` (like ${specificGuide})` : "";
 
     // 1. PUNCHY (<60w)
     if (isPunchy) {
@@ -172,7 +182,7 @@ Output strictly valid JSON with keys "subject" and "body".`,
 
 I hope you’re having a great week!
 
-I’ve been reading ${siteName} and really enjoy your practical ${topic} guides.
+I’ve been reading ${siteName} and really enjoy your practical ${topic} guides${guideMention}.
 
 I’m reaching out from ${companyName} (${companyUrl})—we are ${companyDesc}.
 
@@ -199,7 +209,7 @@ ${companyUrl}`;
 
 I hope you’re having a great week!
 
-I’ve been reading ${siteName} for a while now, especially your practical ${topic} guides (like your ${specificGuide} coverage) and your transparent advice on how brands should work with creators.
+I’ve been reading ${siteName} for a while now, especially your practical ${topic} guides${guideMention} and the detailed tips you share.
 
 I’m reaching out from ${companyName} (${companyUrl}). We are ${companyDesc}.
 
@@ -226,7 +236,7 @@ ${companyUrl}`;
 
 I hope you’re having a productive week!
 
-I’ve been following ${siteName}, especially your practical ${topic} guides (like your ${specificGuide} coverage) and your transparent advice on how brands should work with creators.
+I’ve been following ${siteName}, especially your practical ${topic} guides${guideMention} and your high-quality destination coverage.
 
 I’m reaching out from ${companyName} (${companyUrl}). We are ${companyDesc}.
 
@@ -277,7 +287,7 @@ ${companyUrl}`;
 
 I hope you’re having a great week!
 
-I’ve been reading ${siteName}, especially your practical ${topic} guides (like your ${specificGuide} coverage) and your transparent advice on how brands should work with creators.
+I’ve been reading ${siteName}, especially your practical ${topic} guides${guideMention} and your thorough destination insights.
 
 I’m reaching out from ${companyName} (${companyUrl}). We are ${companyDesc}.
 
@@ -347,24 +357,121 @@ ${companyUrl}`;
 
   private extractTopics(urlStr?: string, pageContext?: string, customAngle?: string) {
     let topic = "Southeast Asia";
-    let specificGuide = "Halong Bay and Indochina";
+    let specificGuide = "";
 
+    // 1. Extract clean article/guide title from pageContext if present
+    if (pageContext) {
+      const titleMatch = pageContext.match(/(?:Article Title|Title|Heading):\s*([^\n\r]+)/i);
+      if (titleMatch && titleMatch[1]) {
+        let clean = titleMatch[1].trim();
+        // Remove trailing brand separators (" | Dan Flying Solo", " - Travel Blog")
+        clean = clean.replace(/\s*([|\-–—:]\s*[^|\-–—:]+)+$/, "").trim();
+        if (clean.length >= 4 && clean.length <= 90) {
+          specificGuide = `your "${clean}" guide`;
+        }
+      }
+    }
+
+    // 2. If no title in pageContext, try to extract article slug from URL path
+    if (!specificGuide && urlStr) {
+      try {
+        const u = new URL(urlStr.startsWith("http") ? urlStr : `https://${urlStr}`);
+        const segments = u.pathname
+          .split("/")
+          .filter(
+            (s) =>
+              s &&
+              ![
+                "blog",
+                "posts",
+                "articles",
+                "category",
+                "tag",
+                "travel",
+                "author",
+                "guide",
+              ].includes(s.toLowerCase()),
+          );
+        if (segments.length > 0) {
+          const last = segments[segments.length - 1].replace(/\.[a-z0-9]+$/i, "");
+          if (last.length >= 4 && !/^\d+$/.test(last)) {
+            const titleFromSlug = last
+              .replace(/[-_]+/g, " ")
+              .split(" ")
+              .filter(Boolean)
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(" ");
+            if (titleFromSlug.length >= 4 && titleFromSlug.length <= 70) {
+              specificGuide = `your "${titleFromSlug}" coverage`;
+            }
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+
+    // 3. Detect primary region/destination topic
     const combined = `${urlStr || ""} ${pageContext || ""} ${customAngle || ""}`.toLowerCase();
-    if (combined.includes("vietnam") || combined.includes("halong")) {
+    if (
+      combined.includes("vietnam") ||
+      combined.includes("halong") ||
+      combined.includes("hanoi") ||
+      combined.includes("saigon") ||
+      combined.includes("da nang")
+    ) {
       topic = "Southeast Asia";
-      specificGuide = "Halong Bay and Indochina";
-    } else if (combined.includes("cambodia") || combined.includes("angkor")) {
+      if (!specificGuide) specificGuide = "your Vietnam destination coverage";
+    } else if (
+      combined.includes("cambodia") ||
+      combined.includes("angkor") ||
+      combined.includes("siem reap")
+    ) {
       topic = "Cambodia";
-      specificGuide = "Angkor Wat and Siem Reap";
-    } else if (combined.includes("thailand") || combined.includes("bangkok")) {
+      if (!specificGuide) specificGuide = "your Angkor Wat and Siem Reap guides";
+    } else if (
+      combined.includes("thailand") ||
+      combined.includes("bangkok") ||
+      combined.includes("phuket") ||
+      combined.includes("chiang mai")
+    ) {
       topic = "Thailand";
-      specificGuide = "Bangkok and island itineraries";
-    } else if (combined.includes("laos")) {
+      if (!specificGuide) specificGuide = "your Thailand itineraries and guides";
+    } else if (combined.includes("laos") || combined.includes("luang prabang")) {
       topic = "Laos";
-      specificGuide = "Luang Prabang and Mekong river journeys";
-    } else if (combined.includes("myanmar")) {
+      if (!specificGuide) specificGuide = "your Luang Prabang and Mekong river journeys";
+    } else if (combined.includes("myanmar") || combined.includes("bagan")) {
       topic = "Myanmar";
-      specificGuide = "Bagan and Inle Lake exploration";
+      if (!specificGuide) specificGuide = "your Bagan and Inle Lake exploration";
+    } else if (
+      combined.includes("japan") ||
+      combined.includes("tokyo") ||
+      combined.includes("kyoto") ||
+      combined.includes("osaka")
+    ) {
+      topic = "Japan";
+      if (!specificGuide) specificGuide = "your Japan travel itineraries";
+    } else if (
+      combined.includes("bali") ||
+      combined.includes("indonesia") ||
+      combined.includes("lombok")
+    ) {
+      topic = "Indonesia";
+      if (!specificGuide) specificGuide = "your Bali and Indonesia guides";
+    } else if (
+      combined.includes("europe") ||
+      combined.includes("italy") ||
+      combined.includes("spain") ||
+      combined.includes("france")
+    ) {
+      topic = "Europe";
+      if (!specificGuide) specificGuide = "your European destination coverage";
+    } else if (combined.includes("asia") || combined.includes("indochina")) {
+      topic = "Southeast Asia";
+      if (!specificGuide) specificGuide = "your Southeast Asia coverage";
+    } else {
+      topic = "travel";
+      if (!specificGuide) specificGuide = "your detailed destination guides";
     }
 
     return { topic, specificGuide };

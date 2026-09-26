@@ -207,8 +207,12 @@ export class ScraperService {
     let candidateEmails = this.extractEmailsFromHtml(html, $);
 
     // Extract clean content snippet
-    $("script, style, nav, footer, header, noscript, svg, iframe, form").remove();
-    const bodyText = $("body").text().replace(/\s+/g, " ").trim();
+    $(
+      "script, style, nav, footer, header, noscript, svg, iframe, form, aside, .cookie-banner, #cookie-notice, .sidebar",
+    ).remove();
+    const articleEl = $("article, main, .entry-content, .post-content, .article-content, #content").first();
+    const rawContent = articleEl.length > 0 ? articleEl.text() : $("body").text();
+    const bodyText = rawContent.replace(/\s+/g, " ").trim();
     const textSnippet = bodyText.slice(0, 1500);
 
     // If no emails found, attempt quick probe of /contact or /about on origin

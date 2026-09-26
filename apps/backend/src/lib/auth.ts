@@ -19,6 +19,7 @@ export const createAuth = (db: Database, trustedOrigins?: string[]) =>
       "http://localhost:5173",
       "https://sent-admin-cts.pages.dev",
       "https://sent.eurasietravel.com",
+      "https://*.eurasietravel.com",
     ],
     plugins: [
       twoFactor(),
