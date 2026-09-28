@@ -53,7 +53,7 @@ export const INITIAL_USER_PROFILE: UserProfileData = {
   title: "Super Administrator",
   department: "Platform Engineering",
   bio: "Core platform architect managing infrastructure, commerce operations, and admin controls.",
-  avatarUrl: "https://avatars.githubusercontent.com/u/107019128?v=4",
+  avatarUrl: "avatar-1",
 };
 
 export const INITIAL_USER_PREFERENCES: UserPreferencesData = {

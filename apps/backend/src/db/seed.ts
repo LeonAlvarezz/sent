@@ -20,6 +20,7 @@ export interface SeedUserConfig {
   email: string;
   role: USER_ROLE;
   password?: string;
+  image?: string;
 }
 
 export const DEFAULT_SEED_USERS: SeedUserConfig[] = [
@@ -29,6 +30,7 @@ export const DEFAULT_SEED_USERS: SeedUserConfig[] = [
     email: process.env.SEED_ADMIN_EMAIL || "superadmin@example.com",
     role: USER_ROLE.SUPER_ADMIN,
     password: process.env.SEED_ADMIN_PASSWORD || DEFAULT_PASSWORD,
+    image: "avatar-1",
   },
   {
     id: "usr_user",
@@ -36,6 +38,7 @@ export const DEFAULT_SEED_USERS: SeedUserConfig[] = [
     email: process.env.SEED_USER_EMAIL || "user@example.com",
     role: USER_ROLE.USER,
     password: process.env.SEED_USER_PASSWORD || DEFAULT_PASSWORD,
+    image: "avatar-2",
   },
 ];
 
@@ -127,11 +130,14 @@ export async function seed(options?: SeedOptions) {
       accountId,
     });
 
+    const userImage =
+      u.image ||
+      (u.role === USER_ROLE.SUPER_ADMIN ? "avatar-1" : "avatar-2");
     sqlStatements.push(`-- ${u.name} (${u.role})`);
     sqlStatements.push(
-      `INSERT INTO user (id, name, email, email_verified, role, banned, two_factor_enabled, created_at, updated_at) ` +
-        `VALUES ('${u.id}', '${u.name}', '${u.email}', 1, '${u.role}', 0, 0, ${now}, ${now}) ` +
-        `ON CONFLICT(email) DO UPDATE SET name=excluded.name, role=excluded.role, updated_at=excluded.updated_at;`,
+      `INSERT INTO user (id, name, email, email_verified, image, role, banned, two_factor_enabled, created_at, updated_at) ` +
+        `VALUES ('${u.id}', '${u.name}', '${u.email}', 1, '${userImage}', '${u.role}', 0, 0, ${now}, ${now}) ` +
+        `ON CONFLICT(email) DO UPDATE SET name=excluded.name, image=excluded.image, role=excluded.role, updated_at=excluded.updated_at;`,
     );
     sqlStatements.push(
       `INSERT INTO account (id, user_id, account_id, provider_id, issuer, password, created_at, updated_at) ` +
@@ -223,10 +229,11 @@ export async function seed(options?: SeedOptions) {
           }
 
           const insertUser = db.prepare(`
-            INSERT INTO user (id, name, email, email_verified, role, banned, two_factor_enabled, created_at, updated_at)
-            VALUES (?, ?, ?, 1, ?, 0, 0, ?, ?)
+            INSERT INTO user (id, name, email, email_verified, image, role, banned, two_factor_enabled, created_at, updated_at)
+            VALUES (?, ?, ?, 1, ?, ?, 0, 0, ?, ?)
             ON CONFLICT(email) DO UPDATE SET
               name=excluded.name,
+              image=excluded.image,
               role=excluded.role,
               updated_at=excluded.updated_at
           `);
@@ -241,7 +248,10 @@ export async function seed(options?: SeedOptions) {
           `);
 
           for (const u of preparedUsers) {
-            insertUser.run(u.id, u.name, u.email, u.role, now, now);
+            const userImage =
+              u.image ||
+              (u.role === USER_ROLE.SUPER_ADMIN ? "avatar-1" : "avatar-2");
+            insertUser.run(u.id, u.name, u.email, userImage, u.role, now, now);
             insertAccount.run(
               u.accountId,
               u.id,

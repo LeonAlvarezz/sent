@@ -111,18 +111,11 @@ export function ChangeRoleModal({
         <ModalBody className="space-y-5">
           {/* Target User Info Summary */}
           <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
-            {targetUser.image ? (
-              <Avatar
-                src={targetUser.image}
-                className="size-10 ring-1 ring-border shrink-0"
-              />
-            ) : (
-              <div className="size-10 rounded-full bg-accent text-accent-foreground font-bold text-sm flex items-center justify-center shrink-0 ring-1 ring-border">
-                {targetUser.name
-                  ? targetUser.name.slice(0, 2).toUpperCase()
-                  : "U"}
-              </div>
-            )}
+            <Avatar
+              src={targetUser.image}
+              name={targetUser.name}
+              className="size-10 ring-1 ring-border shrink-0"
+            />
             <div className="flex flex-col min-w-0 flex-1">
               <span className="font-semibold text-foreground text-sm truncate">
                 {targetUser.name}

@@ -55,7 +55,15 @@ export type {
 } from "./components/workspace-tabs";
 export { useWorkspaceTabsStore } from "./store/workspace-tabs";
 export type { WorkspaceTabsState } from "./store/workspace-tabs";
-export { default as Avatar } from "./components/ui/avatar";
+export {
+  default as Avatar,
+  SimpleAvatar1,
+  SimpleAvatar2,
+  AVATAR_1,
+  AVATAR_2,
+  DEFAULT_AVATAR,
+} from "./components/ui/avatar";
+export type { AvatarProps } from "./components/ui/avatar";
 export { default as Keyboard } from "./components/ui/keyboard";
 export {
   default as Modal,

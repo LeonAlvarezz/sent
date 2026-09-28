@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { useForm } from "@tanstack/react-form";
 import * as v from "valibot";
 import {
   Avatar,
+  AVATAR_1,
   Button,
-  EditIcon,
   Field,
   FieldError,
   FieldLabel,
@@ -41,64 +41,7 @@ export function PersonalInfoSection({
 
   const displayName = user?.name ?? initialData?.name ?? "";
   const displayEmail = user?.email ?? initialData?.email ?? "";
-  const initialAvatar = user?.image ?? initialData?.avatarUrl ?? "";
-
-  const [avatarUrl, setAvatarUrl] = useState(initialAvatar);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (initialAvatar) {
-      setAvatarUrl(initialAvatar);
-    }
-  }, [initialAvatar]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 2MB size limit
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error(
-        "File size exceeds 2MB limit. Please choose a smaller image.",
-      );
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      toast.error(
-        "Invalid file format. Please upload a PNG, JPEG, or WEBP image.",
-      );
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result as string;
-      setAvatarUrl(base64);
-
-      try {
-        await updateUserMutation.mutateAsync({
-          name: form.state.values.name || displayName,
-          image: base64,
-        });
-        toast.success("Avatar updated successfully");
-
-        if (initialData && onSave) {
-          onSave({
-            ...initialData,
-            name: form.state.values.name || displayName,
-            avatarUrl: base64,
-          });
-        }
-      } catch (err) {
-        toast.error(getErrorMessage(err, "Failed to update avatar"));
-      }
-    };
-    reader.readAsDataURL(file);
-
-    // Reset input value so same file can be selected again
-    e.target.value = "";
-  };
+  const displayAvatar = user?.image ?? initialData?.avatarUrl ?? AVATAR_1;
 
   const form = useForm({
     defaultValues: {
@@ -108,7 +51,6 @@ export function PersonalInfoSection({
       try {
         await updateUserMutation.mutateAsync({
           name: value.name,
-          image: avatarUrl || null,
         });
 
         toast.success("Profile information updated successfully");
@@ -117,7 +59,6 @@ export function PersonalInfoSection({
           onSave({
             ...initialData,
             name: value.name,
-            avatarUrl,
           });
         }
       } catch (err) {
@@ -134,60 +75,18 @@ export function PersonalInfoSection({
             Personal Information
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            Update your photo and personal profile details.
+            Personal profile details and identity.
           </p>
         </div>
       </div>
 
       <div className="mt-6 space-y-6">
         <div className="flex items-center gap-5">
-          <div className="relative inline-block">
-            <Button
-              type="button"
-              variant="barebone"
-              onClick={() => fileInputRef.current?.click()}
-              className="group relative block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring p-0"
-              title="Upload new avatar"
-              disabled={updateUserMutation.isPending}
-            >
-              {avatarUrl ? (
-                <Avatar
-                  src={avatarUrl}
-                  className="size-20 rounded-full ring-2 ring-border/50 object-cover shadow-sm group-hover:opacity-90 transition-opacity"
-                />
-              ) : (
-                <div className="size-20 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xl ring-2 ring-border/50 shadow-sm group-hover:opacity-90 transition-opacity">
-                  {(form.state.values.name || displayName || "U")
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .substring(0, 2)
-                    .toUpperCase()}
-                </div>
-              )}
-            </Button>
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              className="hidden"
-            />
-
-            <Button
-              type="button"
-              size="icon"
-              variant="default"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 size-7 rounded-full shadow-md ring-2 ring-background"
-              title="Change avatar"
-              aria-label="Change avatar"
-              disabled={updateUserMutation.isPending}
-            >
-              <EditIcon className="size-3.5" />
-            </Button>
-          </div>
+          <Avatar
+            src={displayAvatar}
+            name={form.state.values.name || displayName}
+            className="size-20 rounded-full ring-2 ring-border/50 shadow-sm"
+          />
 
           <div className="space-y-0.5">
             <h3 className="text-base font-semibold text-foreground">

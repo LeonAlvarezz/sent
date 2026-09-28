@@ -74,7 +74,7 @@ To prevent fragmented, duplicated, and scattered utility functions across featur
 | `<Drawer>`                                    | `import { Drawer } from "@z3/admin-core"`                          | `packages/core/src/components/ui/drawer.tsx`         |
 | `<Pagination>`                                | `import { Pagination } from "@z3/admin-core"`                      | `packages/core/src/components/ui/pagination.tsx`     |
 | `<Keyboard>`                                  | `import { Keyboard } from "@z3/admin-core"`                        | `packages/core/src/components/ui/keyboard.tsx`       |
-| `<Avatar>`                                    | `import { Avatar } from "@z3/admin-core"`                          | `packages/core/src/components/ui/avatar.tsx`         |
+| `<Avatar>`, `<Avatar.Simple1>`, `<Avatar.Simple2>`, `AVATAR_1`, `AVATAR_2` | `import { Avatar, AVATAR_1, AVATAR_2 } from "@z3/admin-core"`     | `packages/core/src/components/ui/avatar.tsx`         |
 | `<Toaster>`, `toast`                          | `import { Toaster, toast } from "@z3/admin-core"`                  | `packages/core/src/components/ui/toaster.tsx`        |
 | `<ChartContainer>`, `<ChartTooltip>`          | `import { ChartContainer, ChartTooltip } from "@z3/admin-core"`    | `packages/core/src/components/ui/chart.tsx`          |
 | `<CommandSearch>`                             | `import { CommandSearch } from "@z3/admin-core"`                   | `packages/core/src/components/ui/command-search.tsx` |

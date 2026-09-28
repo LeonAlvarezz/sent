@@ -4,7 +4,7 @@ import Button from "./ui/button";
 import Input from "./ui/input";
 import Keyboard from "./ui/keyboard";
 import NavItem from "./ui/nav-item";
-import Avatar from "./ui/avatar";
+import Avatar, { AVATAR_1 } from "./ui/avatar";
 import { cn } from "../libs/cn";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 
@@ -218,7 +218,8 @@ function SideBarUserMenu({
       <MenuButton className="w-full flex items-center justify-between py-2 px-2 rounded-md hover:bg-accent cursor-pointer transition-colors group-data-[collapsed=true]:justify-center focus:outline-none">
         <div className="flex gap-2.5 items-center min-w-0">
           <Avatar
-            src={user.avatarUrl}
+            src={user.avatarUrl || AVATAR_1}
+            name={user.name}
             className="group-data-[collapsed=true]:size-6"
           />
           <div className="flex flex-col text-left group-data-[collapsed=true]:hidden min-w-0">

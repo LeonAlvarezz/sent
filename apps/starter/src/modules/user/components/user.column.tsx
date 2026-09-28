@@ -28,27 +28,13 @@ export const createUserColumn = ({
       ),
       cell: ({ row }) => {
         const u = row.original;
-        const initials = u.name
-          ? u.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()
-          : "U";
-
         return (
           <div className="flex items-center gap-3">
-            {u.image ? (
-              <Avatar
-                src={u.image}
-                className="size-9 ring-1 ring-border shrink-0"
-              />
-            ) : (
-              <div className="size-9 rounded-full bg-accent text-accent-foreground font-semibold text-xs flex items-center justify-center shrink-0 ring-1 ring-border">
-                {initials}
-              </div>
-            )}
+            <Avatar
+              src={u.image}
+              name={u.name}
+              className="size-9 ring-1 ring-border shrink-0"
+            />
             <div className="flex flex-col min-w-0">
               <span className="font-medium text-foreground truncate text-sm">
                 {u.name}
