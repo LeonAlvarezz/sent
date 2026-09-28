@@ -1,4 +1,5 @@
 import {
+  CheckIcon,
   CopyIcon,
   copyToClipboard,
   DataTableColumnHeader,
@@ -7,12 +8,14 @@ import {
   EditIcon,
   formatDate,
   formatNumber,
+  Select,
   Tag,
   TimeIcon,
   toast,
   Tooltip,
 } from "@z3/admin-core";
 import type { DefaultDataTableFeatures } from "@z3/admin-core";
+import { SEO_PARTNER_STATUS } from "@z3/types";
 import type { SeoPartner } from "@z3/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { SeoPartnerStatusColor } from "@/modules/shared/status-color";
@@ -21,9 +24,14 @@ export interface CreateSeoPartnerColumnProps {
   onDelete: (partner: SeoPartner) => void;
   onEdit: (partner: SeoPartner) => void;
   onQuickOutreach?: (partner: SeoPartner) => void;
+  onStatusChange?: (
+    partner: SeoPartner,
+    status: SEO_PARTNER_STATUS,
+  ) => Promise<void> | void;
+  updatingIds?: Record<number, boolean>;
 }
 
-const STATUS_LABELS: Record<string, string> = {
+export const STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   outreached: "Outreached",
   overbudget: "Overbudget",
@@ -32,10 +40,100 @@ const STATUS_LABELS: Record<string, string> = {
   rejected: "Rejected",
 };
 
+export const STATUS_OPTIONS = [
+  { value: SEO_PARTNER_STATUS.NOT_STARTED, label: "Not Started" },
+  { value: SEO_PARTNER_STATUS.OUTREACHED, label: "Outreached" },
+  { value: SEO_PARTNER_STATUS.IN_PROGRESS, label: "In Progress" },
+  { value: SEO_PARTNER_STATUS.ACCEPTED, label: "Accepted" },
+  { value: SEO_PARTNER_STATUS.REJECTED, label: "Rejected" },
+  { value: SEO_PARTNER_STATUS.OVERBUDGET, label: "Overbudget" },
+];
+
+function SeoPartnerStatusCell({
+  partner,
+  onStatusChange,
+  isUpdating = false,
+}: {
+  partner: SeoPartner;
+  onStatusChange?: (
+    partner: SeoPartner,
+    status: SEO_PARTNER_STATUS,
+  ) => Promise<void> | void;
+  isUpdating?: boolean;
+}) {
+  const status = partner.outreachStatus;
+  const color = SeoPartnerStatusColor[status];
+  const label = STATUS_LABELS[status] || status;
+
+  if (!onStatusChange) {
+    return (
+      <Tag color={color} className="capitalize font-medium">
+        {label}
+      </Tag>
+    );
+  }
+
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="inline-flex items-center min-w-36"
+    >
+      <Select
+        value={status}
+        onChange={(val) => {
+          if (val && val !== status) {
+            void onStatusChange(partner, val as SEO_PARTNER_STATUS);
+          }
+        }}
+        options={STATUS_OPTIONS}
+        anchor={{ to: "bottom start", gap: 4 }}
+        disabled={isUpdating}
+        loading={isUpdating}
+        sizeVariant="sm"
+        containerClassName="w-36"
+        className="h-7.5 px-2 bg-accent/40 hover:bg-accent/80 transition-colors border-border/60"
+        dropdownClassName="w-40 z-50 shadow-lg"
+        renderValue={(val) => {
+          const s = val as SEO_PARTNER_STATUS;
+          const c = SeoPartnerStatusColor[s];
+          const l = STATUS_LABELS[s] || s;
+          return (
+            <Tag
+              color={c}
+              className="capitalize font-medium text-xs py-0.5 px-1.5"
+            >
+              {l}
+            </Tag>
+          );
+        }}
+        renderOption={(option, { selected }) => {
+          const s = option.value;
+          const c = SeoPartnerStatusColor[s];
+          return (
+            <div className="flex items-center justify-between w-full py-0.5">
+              <Tag
+                color={c}
+                className="capitalize font-medium text-xs py-0.5 px-1.5"
+              >
+                {option.label}
+              </Tag>
+              {selected && (
+                <CheckIcon className="size-3.5 text-primary ml-2 shrink-0" />
+              )}
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+}
+
 export const createSeoPartnerColumns = ({
   onDelete,
   onEdit,
   onQuickOutreach,
+  onStatusChange,
+  updatingIds,
 }: CreateSeoPartnerColumnProps): ColumnDef<
   DefaultDataTableFeatures,
   SeoPartner
@@ -141,18 +239,22 @@ export const createSeoPartnerColumns = ({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
+      meta: {
+        className: "overflow-visible",
+      },
       cell: ({ row }) => {
-        const status = row.original.outreachStatus;
-        const color = SeoPartnerStatusColor[status];
-        const label = STATUS_LABELS[status] || status;
+        const partner = row.original;
+        const isUpdating = Boolean(updatingIds?.[partner.id]);
 
         return (
-          <Tag color={color} className="capitalize font-medium">
-            {label}
-          </Tag>
+          <SeoPartnerStatusCell
+            partner={partner}
+            onStatusChange={onStatusChange}
+            isUpdating={isUpdating}
+          />
         );
       },
-      size: 130,
+      size: 160,
     },
     {
       accessorKey: "outreachDate",

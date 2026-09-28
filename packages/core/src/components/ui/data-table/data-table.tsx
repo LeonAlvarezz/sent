@@ -17,6 +17,7 @@ import {
 import type {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
   RowSelectionState,
   SortingState,
   ColumnVisibilityState,
@@ -34,6 +35,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 export type {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
   RowSelectionState,
   SortingState,
   ColumnVisibilityState,
@@ -109,6 +111,12 @@ export interface DataTableProps<
   enableColumnViewToggle?: boolean;
   pageSizeOptions?: number[];
   initialPageSize?: number;
+  /** Whether to automatically reset page index when data, sorting, or filters change. Defaults to false. */
+  autoResetPageIndex?: boolean;
+  pagination?: PaginationState;
+  onPaginationChange?:
+    | React.Dispatch<React.SetStateAction<PaginationState>>
+    | ((updater: any) => void);
   toolbarActions?: React.ReactNode;
   toolbar?: React.ReactNode | ((table: any) => React.ReactNode);
   emptyState?: React.ReactNode;
@@ -133,6 +141,9 @@ function DataTableRoot<
   enableColumnViewToggle = true,
   pageSizeOptions = [10, 20, 30, 40, 50],
   initialPageSize = 10,
+  autoResetPageIndex = false,
+  pagination: paginationProp,
+  onPaginationChange: onPaginationChangeProp,
   toolbarActions,
   toolbar,
   emptyState,
@@ -154,6 +165,16 @@ function DataTableRoot<
   const activeRowSelection = rowSelectionProp ?? internalRowSelection;
   const handleRowSelectionChange =
     onRowSelectionChangeProp ?? setInternalRowSelection;
+
+  const [internalPagination, setInternalPagination] =
+    React.useState<PaginationState>({
+      pageIndex: 0,
+      pageSize: initialPageSize,
+    });
+  const activePagination = paginationProp ?? internalPagination;
+  const handlePaginationChange =
+    onPaginationChangeProp ?? setInternalPagination;
+
   const { explicitlySizedColumnIds, customCellColumnIds } =
     getColumnDefinitionInfo(columns);
 
@@ -171,24 +192,32 @@ function DataTableRoot<
     features: defaultFeatures,
     data,
     columns: columns as any,
+    autoResetPageIndex,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection: activeRowSelection,
-    },
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: initialPageSize,
-      },
+      pagination: activePagination,
     },
     getRowId,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
+    onPaginationChange: handlePaginationChange,
   });
+
+  // Clamp pageIndex if total pageCount drops below current pageIndex
+  React.useEffect(() => {
+    const pageCount = table.getPageCount();
+    if (pageCount > 0 && activePagination.pageIndex >= pageCount) {
+      handlePaginationChange((prev: PaginationState) => ({
+        ...prev,
+        pageIndex: Math.max(0, pageCount - 1),
+      }));
+    }
+  }, [data, table, activePagination.pageIndex, handlePaginationChange]);
 
   return (
     <div className={cn("w-full space-y-3", className)}>

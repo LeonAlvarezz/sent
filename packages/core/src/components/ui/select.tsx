@@ -114,6 +114,8 @@ export interface SelectProps<T = any> {
   ) => ReactNode;
   /** Custom children for compound options rendering */
   children?: ReactNode;
+  /** Anchor positioning for the dropdown menu (e.g. "bottom start", { to: "bottom start", gap: 4 }). When provided, portals the menu and uses Floating UI. */
+  anchor?: ComponentPropsWithoutRef<typeof ComboboxOptions>["anchor"];
 }
 
 function isGroup<T>(item: RawSelectOption<T>): item is SelectGroup<T> {
@@ -174,6 +176,7 @@ export function Select<T = any>({
   dropdownClassName,
   renderOption,
   renderValue,
+  anchor,
   children,
 }: SelectProps<T>) {
   const autoId = useId();
@@ -693,6 +696,15 @@ export function Select<T = any>({
               className,
             )}
           >
+            {/* Hidden floating reference input for Headless UI anchor positioning when non-searchable */}
+            <ComboboxInput
+              aria-hidden="true"
+              tabIndex={-1}
+              readOnly
+              className="absolute inset-0 size-full opacity-0 pointer-events-none -z-10"
+              displayValue={() => ""}
+            />
+
             {/* Start Icon Slot */}
             {activeStartIcon && (
               <span
@@ -785,9 +797,12 @@ export function Select<T = any>({
         <ComboboxOptions
           ref={optionsRef}
           transition
+          anchor={anchor}
           onScroll={handleScroll}
           className={cn(
-            "absolute top-full left-0 mt-1 z-50 w-full min-w-full max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-xl outline-none",
+            anchor
+              ? "z-50 min-w-36 max-h-60 [--anchor-gap:4px] overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-xl outline-none"
+              : "absolute top-full left-0 mt-1 z-50 w-full min-w-full max-h-60 overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-xl outline-none",
             "transition duration-150 ease-out data-closed:scale-95 data-closed:opacity-0",
             dropdownClassName,
           )}

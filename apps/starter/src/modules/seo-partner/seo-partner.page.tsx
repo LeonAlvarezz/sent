@@ -26,7 +26,10 @@ import {
   useSeoPartnerTargetsQuery,
   useUpdateSeoPartnerMutation,
 } from "./seo-partner.api";
-import { createSeoPartnerColumns } from "./components/seo-partner.column";
+import {
+  createSeoPartnerColumns,
+  STATUS_LABELS,
+} from "./components/seo-partner.column";
 import { SeoPartnerModal } from "./components/seo-partner-modal";
 import { ImportSeoPartnerModal } from "./components/import-seo-partner-modal";
 import { SeoPartnerOutreachDrawer } from "./components/seo-partner-outreach-drawer";
@@ -140,6 +143,34 @@ export function SeoPartnerPage() {
     setSelectedTarget("all");
   };
 
+  // Status update tracking
+  const [updatingIds, setUpdatingIds] = useState<Record<number, boolean>>({});
+
+  const handleStatusChange = async (
+    partner: SeoPartner,
+    newStatus: SEO_PARTNER_STATUS,
+  ) => {
+    if (partner.outreachStatus === newStatus) return;
+    setUpdatingIds((prev) => ({ ...prev, [partner.id]: true }));
+    try {
+      await updateMutation.mutateAsync({
+        id: partner.id,
+        data: { outreachStatus: newStatus },
+      });
+      toast.success(
+        `Updated status to "${STATUS_LABELS[newStatus] || newStatus}"`,
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update status");
+    } finally {
+      setUpdatingIds((prev) => {
+        const next = { ...prev };
+        delete next[partner.id];
+        return next;
+      });
+    }
+  };
+
   const columns = useMemo(
     () =>
       createSeoPartnerColumns({
@@ -152,8 +183,10 @@ export function SeoPartnerPage() {
           setIsModalOpen(true);
         },
         onQuickOutreach: handleQuickOutreach,
+        onStatusChange: handleStatusChange,
+        updatingIds,
       }),
-    [],
+    [updatingIds],
   );
 
   if (isAuthLoading || !currentUser) {
