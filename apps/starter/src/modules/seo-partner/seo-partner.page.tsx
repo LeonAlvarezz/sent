@@ -283,6 +283,7 @@ export function SeoPartnerPage() {
                 <option value="in_progress">In Progress</option>
                 <option value="accepted">Accepted</option>
                 <option value="rejected">Rejected</option>
+                <option value="do_not_contact">Do Not Contact</option>
               </NativeSelect>
 
               {targets.length > 0 && (

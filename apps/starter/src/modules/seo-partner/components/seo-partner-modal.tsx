@@ -224,6 +224,9 @@ export function SeoPartnerModal({
                 </option>
                 <option value={SEO_PARTNER_STATUS.ACCEPTED}>Accepted</option>
                 <option value={SEO_PARTNER_STATUS.REJECTED}>Rejected</option>
+                <option value={SEO_PARTNER_STATUS.DO_NOT_CONTACT}>
+                  Do Not Contact
+                </option>
               </NativeSelect>
             </Field>
 

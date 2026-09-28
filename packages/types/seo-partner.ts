@@ -7,6 +7,7 @@ export enum SEO_PARTNER_STATUS {
   IN_PROGRESS = "in_progress",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
+  DO_NOT_CONTACT = "do_not_contact",
 }
 
 export const SeoPartnerSchema = v.object({

@@ -32,6 +32,17 @@ function normalizeStatus(val: any): SEO_PARTNER_STATUS {
   if (s.includes("progress")) return SEO_PARTNER_STATUS.IN_PROGRESS;
   if (s.includes("accept") || s.includes("live") || s.includes("placed")) return SEO_PARTNER_STATUS.ACCEPTED;
   if (s.includes("reject")) return SEO_PARTNER_STATUS.REJECTED;
+  if (
+    s.includes("do_not_contact") ||
+    s.includes("not_contact") ||
+    s.includes("dnc") ||
+    s.includes("blacklist") ||
+    s.includes("not_work") ||
+    s.includes("wont_work") ||
+    s.includes("blocked")
+  ) {
+    return SEO_PARTNER_STATUS.DO_NOT_CONTACT;
+  }
   return SEO_PARTNER_STATUS.NOT_STARTED;
 }
 

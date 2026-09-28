@@ -45,6 +45,7 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "In Progress",
   accepted: "Accepted",
   rejected: "Rejected",
+  do_not_contact: "Do Not Contact",
 };
 
 export function SeoPartnerOutreachDrawer({

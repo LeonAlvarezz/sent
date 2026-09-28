@@ -38,6 +38,7 @@ export const STATUS_LABELS: Record<string, string> = {
   in_progress: "In Progress",
   accepted: "Accepted",
   rejected: "Rejected",
+  do_not_contact: "Do Not Contact",
 };
 
 export const STATUS_OPTIONS = [
@@ -47,6 +48,7 @@ export const STATUS_OPTIONS = [
   { value: SEO_PARTNER_STATUS.ACCEPTED, label: "Accepted" },
   { value: SEO_PARTNER_STATUS.REJECTED, label: "Rejected" },
   { value: SEO_PARTNER_STATUS.OVERBUDGET, label: "Overbudget" },
+  { value: SEO_PARTNER_STATUS.DO_NOT_CONTACT, label: "Do Not Contact" },
 ];
 
 function SeoPartnerStatusCell({

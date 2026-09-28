@@ -61,7 +61,7 @@ export function filterNavByRole(
         }
       }
 
-      const filteredItems = filterNavItemsByRole(group.items || [], role);
+      const filteredItems = filterNavItemsByRole(group.items, role);
       if (filteredItems.length === 0) {
         return null;
       }

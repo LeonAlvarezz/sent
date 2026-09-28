@@ -20,6 +20,7 @@ export const SeoPartnerStatusColor: Record<SEO_PARTNER_STATUS, Color> = {
   in_progress: "sky",
   accepted: "emerald",
   rejected: "rose",
+  do_not_contact: "zinc",
 };
 
 export const CampaignStatusColor: Record<CAMPAIGN_STATUS, Color> = {
