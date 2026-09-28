@@ -1,6 +1,9 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { outreachRouter, type OutreachEnv } from "./modules/outreach/outreach.hono";
+import {
+  outreachRouter,
+  type OutreachEnv,
+} from "./modules/outreach/outreach.hono";
 import { seoPartnerRouter } from "./modules/seo-partner/seo-partner.hono";
 import { campaignRouter } from "./modules/campaign/campaign.hono";
 import { userRouter } from "./modules/user/user.hono";
@@ -66,8 +69,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
       method: req.method,
       headers,
       body: req.body,
-      duplex: "half",
-    } as any);
+    });
   }
   return auth.handler(req);
 });
