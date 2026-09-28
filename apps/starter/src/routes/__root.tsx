@@ -31,13 +31,18 @@ function RootNotFound() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const handleSignOut = async () => {
+    await logout();
+    navigate({ to: "/login" });
+  };
+
   if (isAuthenticated) {
     return (
       <AdminLayout
         title="Sent Admin"
         navGroups={navGroups}
         user={user ?? undefined}
-        onSignOut={logout}
+        onSignOut={handleSignOut}
         enableTabs={false}
       >
         <NotFound
@@ -68,13 +73,18 @@ function RootErrorComponent({ error, reset }: ErrorComponentProps) {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const handleSignOut = async () => {
+    await logout();
+    navigate({ to: "/login" });
+  };
+
   if (isAuthenticated) {
     return (
       <AdminLayout
         title="Sent Admin"
         navGroups={navGroups}
         user={user ?? undefined}
-        onSignOut={logout}
+        onSignOut={handleSignOut}
         enableTabs={false}
       >
         <ErrorState

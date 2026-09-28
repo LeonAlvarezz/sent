@@ -38,6 +38,12 @@ function AuthenticatedNotFound() {
 
 function AuthenticatedLayout() {
   const { user, logout, isLoading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate({ to: "/login" });
+  };
 
   if (isLoading) {
     return (
@@ -59,7 +65,7 @@ function AuthenticatedLayout() {
       title="Sent Admin"
       navGroups={navGroups}
       user={user ?? undefined}
-      onSignOut={logout}
+      onSignOut={handleSignOut}
     >
       <Outlet />
     </AdminLayout>

@@ -5,6 +5,13 @@ import { ac, admin, super_admin, user } from "./permissions";
 import type { Database } from "@/db";
 import * as schema from "@/db/schema";
 
+const DEFAULT_TRUSTED_ORIGINS = [
+  "http://localhost:5173",
+  "https://sent-admin-cts.pages.dev",
+  "https://sent.eurasietravel.com",
+  "https://*.eurasietravel.com",
+];
+
 export const createAuth = (db: Database, trustedOrigins?: string[]) =>
   betterAuth({
     appName: "Sent Outreach",
@@ -15,12 +22,15 @@ export const createAuth = (db: Database, trustedOrigins?: string[]) =>
     emailAndPassword: {
       enabled: true,
     },
-    trustedOrigins: trustedOrigins || [
-      "http://localhost:5173",
-      "https://sent-admin-cts.pages.dev",
-      "https://sent.eurasietravel.com",
-      "https://*.eurasietravel.com",
-    ],
+    trustedOrigins: Array.from(
+      new Set([...DEFAULT_TRUSTED_ORIGINS, ...(trustedOrigins || [])]),
+    ),
+    advanced: {
+      defaultCookieAttributes: {
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
     plugins: [
       twoFactor(),
       adminPlugin({

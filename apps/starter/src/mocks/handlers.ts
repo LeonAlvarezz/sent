@@ -8,9 +8,18 @@ import type {
 } from "@z3/types";
 import { SAMPLE_USERS } from "./data/users";
 
+const MOCK_LOGGED_OUT_KEY = "sent_mock_user_logged_out";
+
+function isMockLoggedOut(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(MOCK_LOGGED_OUT_KEY) === "true";
+}
+
 // In-memory mock database state
 let mockUsers: User[] = [...SAMPLE_USERS];
-let currentSessionUser: User | null = { ...SAMPLE_USERS[1] }; // Default logged in as Admin User
+let currentSessionUser: User | null = isMockLoggedOut()
+  ? null
+  : { ...SAMPLE_USERS[1] }; // Default logged in as Admin User
 
 export class MockHttpError extends Error {
   status: number;
@@ -24,6 +33,9 @@ export class MockHttpError extends Error {
 }
 
 export function resetMockState() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(MOCK_LOGGED_OUT_KEY);
+  }
   mockUsers = [...SAMPLE_USERS];
   currentSessionUser = { ...SAMPLE_USERS[1] };
 }
@@ -106,6 +118,9 @@ export async function handleMockRequest<T = any>(
       mockUsers.push(user);
     }
 
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(MOCK_LOGGED_OUT_KEY);
+    }
     currentSessionUser = { ...user };
 
     const signInRes: SignInEmailResponse = {
@@ -125,6 +140,9 @@ export async function handleMockRequest<T = any>(
   }
 
   if (pathname === "/auth/sign-out" && method === "POST") {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(MOCK_LOGGED_OUT_KEY, "true");
+    }
     currentSessionUser = null;
     return { success: true };
   }

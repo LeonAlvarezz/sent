@@ -12,14 +12,18 @@ import type {
 export const authStrategy: SessionAuthStrategy = new SessionAuthStrategy({
   onInitialize: async () => {
     try {
-      const { user: userResponse } =
-        await apiClient.get<SessionResponse>("/auth/get-session");
+      const res =
+        await apiClient.get<SessionResponse | null>("/auth/get-session");
+      if (!res?.user) {
+        queryClient.clear();
+        return null;
+      }
       return {
-        id: userResponse.id,
-        email: userResponse.email,
-        name: userResponse.name,
-        avatarUrl: userResponse.image ?? undefined,
-        role: userResponse.role,
+        id: res.user.id,
+        email: res.user.email,
+        name: res.user.name,
+        avatarUrl: res.user.image ?? undefined,
+        role: res.user.role,
       };
     } catch {
       queryClient.clear();
@@ -52,7 +56,9 @@ export const authStrategy: SessionAuthStrategy = new SessionAuthStrategy({
 
   onLogout: async () => {
     try {
-      await apiClient.post("/auth/sign-out");
+      await apiClient.post("/auth/sign-out", {});
+    } catch (error) {
+      console.warn("Server sign-out warning:", error);
     } finally {
       queryClient.clear();
     }

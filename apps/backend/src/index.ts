@@ -58,7 +58,18 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
   const origin = c.req.header("origin") || "http://localhost:5173";
   const db = createDb(c.env.DB);
   const auth = createAuth(db, [origin]);
-  return auth.handler(c.req.raw);
+  let req = c.req.raw;
+  if (!req.headers.get("origin")) {
+    const headers = new Headers(req.headers);
+    headers.set("origin", origin);
+    req = new Request(req.url, {
+      method: req.method,
+      headers,
+      body: req.body,
+      duplex: "half",
+    } as any);
+  }
+  return auth.handler(req);
 });
 
 // Authentication Middleware for API routes

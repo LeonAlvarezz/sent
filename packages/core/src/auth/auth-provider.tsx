@@ -93,8 +93,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     } finally {
       setUser(null);
       setIsLoading(false);
+      if (onUnauthenticated) {
+        onUnauthenticated();
+      }
     }
-  }, [strategy]);
+  }, [strategy, onUnauthenticated]);
 
   const refreshToken = useCallback(async (): Promise<string | null> => {
     if (!strategy.refreshToken) return null;
