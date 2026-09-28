@@ -25,7 +25,7 @@ export const createAuth = (db: Database, trustedOrigins?: string[]) =>
       twoFactor(),
       adminPlugin({
         ac,
-        adminRoles: ["admin", "super_admin"],
+        adminRoles: ["super_admin"],
         roles: {
           admin,
           super_admin,

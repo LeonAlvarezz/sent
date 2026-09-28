@@ -5,8 +5,9 @@ import {
   DataTable,
   Input,
   NativeSelect,
+  PageLoadingSkeleton,
   SearchIcon,
-  SpinnerIcon,
+  Unauthorized,
   useAuth,
   useQueryFilters,
 } from "@z3/admin-core";
@@ -41,9 +42,7 @@ export function UserPage() {
     React.useState<User | null>(null);
   const [isRoleModalOpen, setIsRoleModalOpen] = React.useState(false);
 
-  const isAuthorized =
-    currentUser?.role === USER_ROLE.ADMIN ||
-    currentUser?.role === USER_ROLE.SUPER_ADMIN;
+  const isAuthorized = currentUser?.role === USER_ROLE.SUPER_ADMIN;
 
   const { data, isLoading } = useUsersQuery(filters, { enabled: isAuthorized });
 
@@ -59,28 +58,12 @@ export function UserPage() {
   });
 
   if (isAuthLoading || !currentUser) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-100 text-center p-6">
-        <SpinnerIcon className="size-6 animate-spin text-primary mb-2" />
-        <p className="text-sm text-muted-foreground">Checking permissions...</p>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   if (!isAuthorized) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-100 text-center p-6 border border-border rounded-xl bg-card">
-        <div className="size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-3">
-          <span className="text-xl font-bold">!</span>
-        </div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Access Restricted
-        </h2>
-        <p className="text-sm text-muted-foreground max-w-md mt-1">
-          You do not have administrator permissions to view or manage user
-          accounts. Contact a system administrator for access.
-        </p>
-      </div>
+      <Unauthorized description="You do not have administrator permissions to view or manage user accounts. Contact a system administrator for access." />
     );
   }
 

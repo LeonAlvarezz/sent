@@ -8,6 +8,8 @@
   - Replace static status `<Tag>` in SEO Partners data table with interactive `<Select>` / `<NativeSelect>`.
   - Enable instant inline status updates directly from table rows without opening edit modal.
 
-- [ ] **Access Control & Permissions Gating**
-  - Restrict Quick Outreach (`/outreach`) and User List (`/users`) visibility and access strictly to `super_admin`.
+- [x] **Access Control & Permissions Gating**
+  - Restrict User List (`/users`) visibility and access strictly to `super_admin`.
+  - Grant `admin` access to SEO (Partners, Quick Outreach), Bulk Email, and Mail Settings.
+  - Grant standard `user` access to Bulk Email (Audiences, Bulk Send, Queue) and Settings.
   - Enforce permissions across navigation items, route loaders/guards, and backend API endpoints.

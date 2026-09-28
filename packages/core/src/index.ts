@@ -119,6 +119,8 @@ export { default as NotFound } from "./components/ui/not-found";
 export type { NotFoundProps } from "./components/ui/not-found";
 export { default as ErrorState } from "./components/ui/error-state";
 export type { ErrorStateProps } from "./components/ui/error-state";
+export { default as Unauthorized } from "./components/ui/unauthorized";
+export type { UnauthorizedProps } from "./components/ui/unauthorized";
 export {
   default as Switch,
   Switch as CoreSwitch,

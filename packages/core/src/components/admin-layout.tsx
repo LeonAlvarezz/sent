@@ -4,6 +4,7 @@ import SideBar from "./sidebar";
 import { CommandSearch, CommandSearchProvider } from "./ui/command-search";
 import WorkspaceTabs from "./workspace-tabs";
 import RouteProgressBar from "./ui/route-progress-bar";
+import { filterNavByRole, filterNavItemsByRole } from "../utils/navigation";
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   title = "Sent",
@@ -23,6 +24,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   enableProgressBar = false,
   children,
 }) => {
+  const effectiveNavGroups = React.useMemo(() => {
+    if (!navGroups) return undefined;
+    return filterNavByRole(navGroups, user?.role);
+  }, [navGroups, user?.role]);
+
+  const effectiveNavItems = React.useMemo(() => {
+    if (!navItems) return undefined;
+    return filterNavItemsByRole(navItems, user?.role);
+  }, [navItems, user?.role]);
+
   return (
     <CommandSearchProvider>
       {enableProgressBar && <RouteProgressBar />}
@@ -33,8 +44,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           <SideBar
             title={title}
             logo={logo}
-            navGroups={navGroups}
-            navItems={navItems}
+            navGroups={effectiveNavGroups}
+            navItems={effectiveNavItems}
             footerNavItems={footerNavItems}
             user={user}
             userMenuItems={userMenuItems}
@@ -50,7 +61,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             </header>
           )}
           {enableTabs && (
-            <WorkspaceTabs navGroups={navGroups} navItems={navItems} />
+            <WorkspaceTabs navGroups={effectiveNavGroups} navItems={effectiveNavItems} />
           )}
           <main className="flex-1 flex flex-col p-4 md:p-6 pb-20 md:pb-6 overflow-y-auto">
             {children}
@@ -58,8 +69,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </div>
       </div>
       <CommandSearch
-        navGroups={navGroups}
-        navItems={navItems}
+        navGroups={effectiveNavGroups}
+        navItems={effectiveNavItems}
         groups={commandGroups}
         items={commandItems}
         onSignOut={onSignOut}

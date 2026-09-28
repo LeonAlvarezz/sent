@@ -185,6 +185,10 @@ export async function handleMockRequest<T = any>(
   // USER ROUTES
   // ---------------------------------------------------------
   if (pathname === "/users" && method === "GET") {
+    if (currentSessionUser && currentSessionUser.role !== USER_ROLE.SUPER_ADMIN) {
+      throw new MockHttpError(403, "Forbidden: insufficient permissions");
+    }
+
     let filtered = [...mockUsers];
 
     if (params.search && typeof params.search === "string") {
@@ -235,6 +239,10 @@ export async function handleMockRequest<T = any>(
   }
 
   if (pathname === "/users/set-role" && method === "POST") {
+    if (currentSessionUser && currentSessionUser.role !== USER_ROLE.SUPER_ADMIN) {
+      throw new MockHttpError(403, "Forbidden: insufficient permissions");
+    }
+
     const { userId, role } = config.data || {};
     const userIndex = mockUsers.findIndex((u) => u.id === userId);
     if (userIndex === -1) {

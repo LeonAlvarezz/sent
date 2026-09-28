@@ -1,6 +1,7 @@
 import React from "react";
 import type { NavGroupConfig } from "@z3/admin-core";
 import { MailIcon, UserIcon, UsersIcon } from "@z3/admin-core";
+import { USER_ROLE } from "@z3/types";
 
 import DashboardIcon from "~icons/boxicons/dashboard-filled";
 import TimeIcon from "~icons/mingcute/time-fill";
@@ -31,18 +32,21 @@ export const navGroups: NavGroupConfig[] = [
         label: "SEO",
         icon: <CompassIcon />,
         defaultOpen: true,
+        roles: [USER_ROLE.SUPER_ADMIN, USER_ROLE.ADMIN],
         items: [
           {
             id: "seo-partners",
             label: "Partners",
             path: "/seo-partners",
             icon: <GlobeIcon />,
+            roles: [USER_ROLE.SUPER_ADMIN, USER_ROLE.ADMIN],
           },
           {
             id: "seo-quick-outreach",
             label: "Quick Outreach",
             path: "/outreach",
             icon: <TimeIcon />,
+            roles: [USER_ROLE.SUPER_ADMIN, USER_ROLE.ADMIN],
           },
         ],
       },
@@ -83,6 +87,7 @@ export const navGroups: NavGroupConfig[] = [
         label: "Users",
         icon: <UsersIcon />,
         path: "/users",
+        roles: [USER_ROLE.SUPER_ADMIN],
       },
       {
         id: "settings",

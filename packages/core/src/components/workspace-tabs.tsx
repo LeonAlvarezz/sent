@@ -120,6 +120,26 @@ function findNavInfo(
   return { title };
 }
 
+function isNavPathAllowed(
+  path: string,
+  navGroups?: NavGroupConfig[],
+  navItems?: NavItemConfig[],
+): boolean {
+  if (!navGroups && !navItems) return true;
+  const allItems: NavItemConfig[] = [
+    ...(navItems || []),
+    ...(navGroups?.flatMap((g) => g.items) || []),
+  ];
+  const searchList = (list: NavItemConfig[]): boolean => {
+    for (const item of list) {
+      if (item.path === path) return true;
+      if (item.items && searchList(item.items)) return true;
+    }
+    return false;
+  };
+  return searchList(allItems);
+}
+
 export interface WorkspaceTabContextMenuProps {
   className?: string;
 }
@@ -456,15 +476,20 @@ export const WorkspaceTabs: WorkspaceTabsComponent = ({
           ? [pathname]
           : [];
 
-    return paths.map((path) => {
-      const navInfo = findNavInfo(path, navGroups, navItems);
-      return {
-        id: path,
-        path,
-        title: navInfo.title,
-        icon: navInfo.icon,
-      };
-    });
+    return paths
+      .filter((path) => {
+        if (path === "/" || path === pathname) return true;
+        return isNavPathAllowed(path, navGroups, navItems);
+      })
+      .map((path) => {
+        const navInfo = findNavInfo(path, navGroups, navItems);
+        return {
+          id: path,
+          path,
+          title: navInfo.title,
+          icon: navInfo.icon,
+        };
+      });
   }, [tabPaths, pathname, navGroups, navItems]);
 
   // Don't render tab bar if no open tabs

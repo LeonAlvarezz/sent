@@ -20,6 +20,7 @@ import {
   UpdatePitchProfileSchema,
   UpdateSenderIdentitySchema,
 } from "@z3/types";
+import { requireAdminOrSuperAdmin } from "@/lib/permissions";
 
 export type OutreachEnv = {
   Bindings: {
@@ -193,11 +194,14 @@ async function handleGetEmails(c: any) {
     : undefined;
   const search = c.req.query("search") || undefined;
   const title = c.req.query("title") || undefined;
-  const limit = c.req.query("limit")
-    ? Number(c.req.query("limit"))
-    : undefined;
+  const limit = c.req.query("limit") ? Number(c.req.query("limit")) : undefined;
   const { repo } = getServices(c.env.DB);
-  const emails = await repo.getEmails(user.id, { listId, search, limit, title });
+  const emails = await repo.getEmails(user.id, {
+    listId,
+    search,
+    limit,
+    title,
+  });
   return c.json({ success: true, data: emails });
 }
 
@@ -277,42 +281,58 @@ outreachRouter.get("/ai-status", async (c) => {
   });
 });
 
-outreachRouter.post("/scrape", async (c) => {
-  const body = await c.req.json();
-  const payload = v.parse(ScrapeUrlSchema, body);
-  const { scraperService } = getServices(c.env.DB);
-  const result = await scraperService.scrapeUrl(payload.url);
-  return c.json({ success: true, data: result });
-});
+outreachRouter.post(
+  "/scrape",
+  requireAdminOrSuperAdmin,
+  async (c) => {
+    const body = await c.req.json();
+    const payload = v.parse(ScrapeUrlSchema, body);
+    const { scraperService } = getServices(c.env.DB);
+    const result = await scraperService.scrapeUrl(payload.url);
+    return c.json({ success: true, data: result });
+  },
+);
 
-outreachRouter.post("/generate", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(GenerateDraftSchema, body);
-  const { generatorService } = getServices(c.env.DB);
-  const draft = await generatorService.generateDraft(
-    payload,
-    user.id,
-    c.env?.OPENAI_API_KEY,
-  );
-  return c.json({ success: true, data: draft });
-});
+outreachRouter.post(
+  "/generate",
+  requireAdminOrSuperAdmin,
+  async (c) => {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const payload = v.parse(GenerateDraftSchema, body);
+    const { generatorService } = getServices(c.env.DB);
+    const draft = await generatorService.generateDraft(
+      payload,
+      user.id,
+      c.env?.OPENAI_API_KEY,
+    );
+    return c.json({ success: true, data: draft });
+  },
+);
 
-outreachRouter.post("/dispatch", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(DispatchOutreachSchema, body);
-  const { dispatchService } = getServices(c.env.DB);
-  const result = await dispatchService.dispatchEmail(payload, user.id);
-  return c.json(result);
-});
+outreachRouter.post(
+  "/dispatch",
+  requireAdminOrSuperAdmin,
+  async (c) => {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const payload = v.parse(DispatchOutreachSchema, body);
+    const { dispatchService } = getServices(c.env.DB);
+    const result = await dispatchService.dispatchEmail(payload, user.id);
+    return c.json(result);
+  },
+);
 
-outreachRouter.get("/logs", async (c) => {
-  const user = c.get("user");
-  const { repo } = getServices(c.env.DB);
-  const logs = await repo.getOutreachLogs(user.id);
-  return c.json({ success: true, data: logs });
-});
+outreachRouter.get(
+  "/logs",
+  requireAdminOrSuperAdmin,
+  async (c) => {
+    const user = c.get("user");
+    const { repo } = getServices(c.env.DB);
+    const logs = await repo.getOutreachLogs(user.id);
+    return c.json({ success: true, data: logs });
+  },
+);
 
 // --- SETTINGS ---
 outreachRouter.get("/settings", async (c) => {

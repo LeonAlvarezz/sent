@@ -15,6 +15,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedBulkSendRouteImport } from './routes/_authenticated/bulk-send'
 import { Route as AuthenticatedCampaignQueueRouteImport } from './routes/_authenticated/campaign-queue'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
+import { Route as AuthenticatedForbiddenRouteImport } from './routes/_authenticated/forbidden'
 import { Route as AuthenticatedOutreachRouteImport } from './routes/_authenticated/outreach'
 import { Route as AuthenticatedOutreachSettingsRouteImport } from './routes/_authenticated/outreach-settings'
 import { Route as AuthenticatedSeoPartnersRouteImport } from './routes/_authenticated/seo-partners'
@@ -51,6 +52,11 @@ const AuthenticatedCampaignQueueRoute =
 const AuthenticatedEmailsRoute = AuthenticatedEmailsRouteImport.update({
   id: '/emails',
   path: '/emails',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedForbiddenRoute = AuthenticatedForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedOutreachRoute = AuthenticatedOutreachRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/bulk-send': typeof AuthenticatedBulkSendRoute
   '/campaign-queue': typeof AuthenticatedCampaignQueueRoute
   '/emails': typeof AuthenticatedEmailsRoute
+  '/forbidden': typeof AuthenticatedForbiddenRoute
   '/outreach': typeof AuthenticatedOutreachRoute
   '/outreach-settings': typeof AuthenticatedOutreachSettingsRoute
   '/seo-partners': typeof AuthenticatedSeoPartnersRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/bulk-send': typeof AuthenticatedBulkSendRoute
   '/campaign-queue': typeof AuthenticatedCampaignQueueRoute
   '/emails': typeof AuthenticatedEmailsRoute
+  '/forbidden': typeof AuthenticatedForbiddenRoute
   '/outreach': typeof AuthenticatedOutreachRoute
   '/outreach-settings': typeof AuthenticatedOutreachSettingsRoute
   '/seo-partners': typeof AuthenticatedSeoPartnersRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_authenticated/bulk-send': typeof AuthenticatedBulkSendRoute
   '/_authenticated/campaign-queue': typeof AuthenticatedCampaignQueueRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
+  '/_authenticated/forbidden': typeof AuthenticatedForbiddenRoute
   '/_authenticated/outreach': typeof AuthenticatedOutreachRoute
   '/_authenticated/outreach-settings': typeof AuthenticatedOutreachSettingsRoute
   '/_authenticated/seo-partners': typeof AuthenticatedSeoPartnersRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/bulk-send'
     | '/campaign-queue'
     | '/emails'
+    | '/forbidden'
     | '/outreach'
     | '/outreach-settings'
     | '/seo-partners'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/bulk-send'
     | '/campaign-queue'
     | '/emails'
+    | '/forbidden'
     | '/outreach'
     | '/outreach-settings'
     | '/seo-partners'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bulk-send'
     | '/_authenticated/campaign-queue'
     | '/_authenticated/emails'
+    | '/_authenticated/forbidden'
     | '/_authenticated/outreach'
     | '/_authenticated/outreach-settings'
     | '/_authenticated/seo-partners'
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEmailsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/forbidden': {
+      id: '/_authenticated/forbidden'
+      path: '/forbidden'
+      fullPath: '/forbidden'
+      preLoaderRoute: typeof AuthenticatedForbiddenRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/outreach': {
       id: '/_authenticated/outreach'
       path: '/outreach'
@@ -289,6 +308,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBulkSendRoute: typeof AuthenticatedBulkSendRoute
   AuthenticatedCampaignQueueRoute: typeof AuthenticatedCampaignQueueRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
+  AuthenticatedForbiddenRoute: typeof AuthenticatedForbiddenRoute
   AuthenticatedOutreachRoute: typeof AuthenticatedOutreachRoute
   AuthenticatedOutreachSettingsRoute: typeof AuthenticatedOutreachSettingsRoute
   AuthenticatedSeoPartnersRoute: typeof AuthenticatedSeoPartnersRoute
@@ -303,6 +323,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBulkSendRoute: AuthenticatedBulkSendRoute,
   AuthenticatedCampaignQueueRoute: AuthenticatedCampaignQueueRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,
+  AuthenticatedForbiddenRoute: AuthenticatedForbiddenRoute,
   AuthenticatedOutreachRoute: AuthenticatedOutreachRoute,
   AuthenticatedOutreachSettingsRoute: AuthenticatedOutreachSettingsRoute,
   AuthenticatedSeoPartnersRoute: AuthenticatedSeoPartnersRoute,

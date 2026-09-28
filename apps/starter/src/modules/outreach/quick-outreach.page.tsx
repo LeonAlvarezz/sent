@@ -12,12 +12,15 @@ import {
   FieldLabel,
   HistoryIcon,
   Input,
+  PageLoadingSkeleton,
   SearchIcon,
   Select,
   SpinnerIcon,
   Tag,
   Textarea,
   toast,
+  Unauthorized,
+  useAuth,
 } from "@z3/admin-core";
 import {
   useDispatchEmailMutation,
@@ -28,7 +31,7 @@ import {
   useEmailListsQuery,
   useOutreachLogsQuery,
 } from "./outreach.api";
-import { FOLLOW_UP_ACTION } from "@z3/types";
+import { FOLLOW_UP_ACTION, USER_ROLE } from "@z3/types";
 
 const FOLLOW_UP_OPTIONS = [
   { value: FOLLOW_UP_ACTION.ALERT, label: "Alert Me (Task)" },
@@ -36,6 +39,11 @@ const FOLLOW_UP_OPTIONS = [
 ];
 
 export function QuickOutreachPage() {
+  const { user: currentUser, isLoading: isAuthLoading } = useAuth();
+  const isAuthorized =
+    currentUser?.role === USER_ROLE.SUPER_ADMIN ||
+    currentUser?.role === USER_ROLE.ADMIN;
+
   const searchParams = useSearch({ strict: false });
 
   // Scraped page context & discovered email candidates
@@ -263,6 +271,16 @@ export function QuickOutreachPage() {
       label: `${list.name} (${list.emailCount} emails)`,
     })),
   ];
+
+  if (isAuthLoading || !currentUser) {
+    return <PageLoadingSkeleton />;
+  }
+
+  if (!isAuthorized) {
+    return (
+      <Unauthorized description="You do not have administrator permissions to view or access Quick Outreach. Contact a system administrator for access." />
+    );
+  }
 
   return (
     <div className="space-y-6">

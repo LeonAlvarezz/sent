@@ -85,6 +85,8 @@ To prevent fragmented, duplicated, and scattered utility functions across featur
 | `<Tag>`                                       | `import { Tag } from "@z3/admin-core"`                             | `packages/core/src/components/ui/tag.tsx`            |
 | `<NumberStepper>`, `<Stepper>`                | `import { NumberStepper, Stepper } from "@z3/admin-core"`          | `packages/core/src/components/ui/number-stepper.tsx` |
 | `<NotFound>`                                  | `import { NotFound } from "@z3/admin-core"`                        | `packages/core/src/components/ui/not-found.tsx`      |
+| `<Unauthorized>`                              | `import { Unauthorized } from "@z3/admin-core"`                    | `packages/core/src/components/ui/unauthorized.tsx`   |
+| `<ErrorState>`                                | `import { ErrorState } from "@z3/admin-core"`                      | `packages/core/src/components/ui/error-state.tsx`     |
 | `<Switch>`                                    | `import { Switch } from "@z3/admin-core"`                          | `packages/core/src/components/ui/switch.tsx`         |
 | `<Skeleton>`                                  | `import { Skeleton } from "@z3/admin-core"`                        | `packages/core/src/components/ui/skeleton.tsx`       |
 | `<Card>`, `<Card.Header>`, `<Card.Content>`   | `import { Card } from "@z3/admin-core"`                            | `packages/core/src/components/ui/card.tsx`           |
@@ -108,6 +110,8 @@ To prevent fragmented, duplicated, and scattered utility functions across featur
 | `countWords(text)`                 | Counts words in a string by whitespace delimiters     | `countWords("Hello world")`                                  | `packages/core/src/utils/string.ts`     |
 | `copyToClipboard(text)`            | Asynchronous clipboard copy with fallback             | `await copyToClipboard("SKU-12345")`                         | `packages/core/src/utils/dom.ts`        |
 | `normalizeAccept(accept)`          | Normalizes file presets, extensions, and array inputs | `normalizeAccept(["image", ".pdf"])`                         | `packages/core/src/utils/file.ts`       |
+| `filterNavByRole(groups, role?)`   | Filters navigation groups and nested items by role    | `filterNavByRole(navGroups, user?.role)`                      | `packages/core/src/utils/navigation.ts` |
+| `hasRequiredRole(role, allowed?)`  | Checks if user role satisfies allowed roles           | `hasRequiredRole(user?.role, ["super_admin"])`                | `packages/core/src/utils/navigation.ts` |
 
 ### Shared Hooks (`@z3/admin-core`)
 

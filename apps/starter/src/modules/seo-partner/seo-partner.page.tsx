@@ -8,12 +8,15 @@ import {
   Input,
   MailIcon,
   NativeSelect,
+  PageLoadingSkeleton,
   PlusIcon,
   SearchIcon,
   toast,
+  Unauthorized,
   UploadCloudIcon,
+  useAuth,
 } from "@z3/admin-core";
-import { SEO_PARTNER_STATUS } from "@z3/types";
+import { SEO_PARTNER_STATUS, USER_ROLE } from "@z3/types";
 import type { CreateSeoPartner, SeoPartner, UpdateSeoPartner } from "@z3/types";
 import {
   useCreateSeoPartnerMutation,
@@ -30,6 +33,10 @@ import { SeoPartnerOutreachDrawer } from "./components/seo-partner-outreach-draw
 
 export function SeoPartnerPage() {
   const navigate = useNavigate();
+  const { user: currentUser, isLoading: isAuthLoading } = useAuth();
+  const isAuthorized =
+    currentUser?.role === USER_ROLE.SUPER_ADMIN ||
+    currentUser?.role === USER_ROLE.ADMIN;
 
   // Search & Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,12 +61,17 @@ export function SeoPartnerPage() {
   );
 
   // Queries
-  const { data: targets = [] } = useSeoPartnerTargetsQuery();
-  const { data: partners = [], isLoading } = useSeoPartnersQuery({
-    search: searchTerm.trim() || undefined,
-    status: selectedStatus !== "all" ? selectedStatus : undefined,
-    backlinkFor: selectedTarget !== "all" ? selectedTarget : undefined,
+  const { data: targets = [] } = useSeoPartnerTargetsQuery({
+    enabled: isAuthorized,
   });
+  const { data: partners = [], isLoading } = useSeoPartnersQuery(
+    {
+      search: searchTerm.trim() || undefined,
+      status: selectedStatus !== "all" ? selectedStatus : undefined,
+      backlinkFor: selectedTarget !== "all" ? selectedTarget : undefined,
+    },
+    { enabled: isAuthorized },
+  );
 
   // Mutations
   const createMutation = useCreateSeoPartnerMutation();
@@ -143,6 +155,16 @@ export function SeoPartnerPage() {
       }),
     [],
   );
+
+  if (isAuthLoading || !currentUser) {
+    return <PageLoadingSkeleton />;
+  }
+
+  if (!isAuthorized) {
+    return (
+      <Unauthorized description="You do not have administrator permissions to view or manage SEO partners. Contact a system administrator for access." />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">

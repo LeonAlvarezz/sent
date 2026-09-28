@@ -33,12 +33,20 @@ export const DEFAULT_SEED_USERS: SeedUserConfig[] = [
     image: "avatar-1",
   },
   {
+    id: "usr_admin",
+    name: "Admin User",
+    email: process.env.SEED_ADMIN_USER_EMAIL || "admin@example.com",
+    role: USER_ROLE.ADMIN,
+    password: process.env.SEED_ADMIN_USER_PASSWORD || DEFAULT_PASSWORD,
+    image: "avatar-2",
+  },
+  {
     id: "usr_user",
     name: "Standard User",
     email: process.env.SEED_USER_EMAIL || "user@example.com",
     role: USER_ROLE.USER,
     password: process.env.SEED_USER_PASSWORD || DEFAULT_PASSWORD,
-    image: "avatar-2",
+    image: "avatar-1",
   },
 ];
 

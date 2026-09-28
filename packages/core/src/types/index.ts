@@ -23,12 +23,14 @@ export interface NavItemConfig {
   badge?: React.ReactNode;
   defaultOpen?: boolean;
   items?: NavItemConfig[];
+  roles?: string[];
 }
 
 export interface NavGroupConfig {
   id?: string;
   title?: string;
   items: NavItemConfig[];
+  roles?: string[];
 }
 
 export interface UserProfile {

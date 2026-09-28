@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { outreachRouter, type OutreachEnv } from "./modules/outreach/outreach.hono";
 import { seoPartnerRouter } from "./modules/seo-partner/seo-partner.hono";
 import { campaignRouter } from "./modules/campaign/campaign.hono";
+import { userRouter } from "./modules/user/user.hono";
 import { createDb } from "./db";
 import { createAuth } from "./lib/auth";
 
@@ -92,9 +93,9 @@ app.use("/api/*", async (c, next) => {
   // Fallback dev user when running locally without session cookie
   c.set("user", {
     id: "dev-user-1",
-    email: "admin@sent.dev",
-    role: "admin",
-    name: "Admin Dev",
+    email: "superadmin@sent.dev",
+    role: "super_admin",
+    name: "Super Admin Dev",
   });
 
   return next();
@@ -108,5 +109,8 @@ app.route("/api/campaigns", campaignRouter);
 
 // Mount SEO Partner routes
 app.route("/api/seo-partners", seoPartnerRouter);
+
+// Mount User Management routes (super_admin only)
+app.route("/api/users", userRouter);
 
 export default app;

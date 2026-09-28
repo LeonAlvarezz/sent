@@ -3,6 +3,7 @@ import { createDb } from "@/db";
 import { SeoPartnerRepository } from "./seo-partner.repository";
 import { SeoPartnerService } from "./seo-partner.service";
 import { SeoPartnerController } from "./seo-partner.controller";
+import { requireAdminOrSuperAdmin } from "@/lib/permissions";
 
 export type SeoPartnerEnv = {
   Bindings: {
@@ -20,6 +21,9 @@ export type SeoPartnerEnv = {
 };
 
 export const seoPartnerRouter = new Hono<SeoPartnerEnv>();
+
+// Restrict all SEO Partner endpoints to admin and super_admin
+seoPartnerRouter.use("*", requireAdminOrSuperAdmin);
 
 function getController(dbBinding: D1Database): SeoPartnerController {
   const db = createDb(dbBinding);
