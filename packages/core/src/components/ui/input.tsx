@@ -7,6 +7,7 @@ import { cn } from "../../libs/cn";
 import { EyeIcon, EyeOffIcon as EyeClosedIcon } from "./icons";
 
 export interface InputProps extends HeadlessInputProps<"input"> {
+  ref?: React.Ref<HTMLInputElement>;
   startIcon?: ReactNode;
   endIcon?: ReactNode;
   containerClassName?: string;
@@ -18,6 +19,7 @@ function InputRoot({
   startIcon,
   endIcon,
   placeholder = "Type here...",
+  ref,
   ...props
 }: InputProps) {
   return (
@@ -33,6 +35,7 @@ function InputRoot({
         </span>
       )}
       <HeadlessInput
+        ref={ref}
         className={cn(
           "w-full bg-transparent text-sm text-foreground placeholder:text-foreground/40 outline-none border-0 p-0 focus:outline-none focus:ring-0",
           className,

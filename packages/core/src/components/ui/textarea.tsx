@@ -6,6 +6,7 @@ import { cn } from "../../libs/cn";
 import { countWords, trimToWordCount } from "../../utils/string";
 
 export interface TextareaProps extends HeadlessTextareaProps<"textarea"> {
+  ref?: React.Ref<HTMLTextAreaElement>;
   /** Maximum number of words allowed */
   maxWordCount?: number;
   /** Whether to show the word count indicator (defaults to true if maxWordCount is set) */
@@ -38,6 +39,7 @@ export function Textarea({
   disabled,
   id: propId,
   "aria-describedby": ariaDescribedBy,
+  ref,
   ...props
 }: TextareaProps) {
   const generatedId = useId();
@@ -99,6 +101,7 @@ export function Textarea({
       )}
     >
       <HeadlessTextarea
+        ref={ref}
         id={id}
         rows={rows}
         disabled={disabled}
