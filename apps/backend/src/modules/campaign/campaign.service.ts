@@ -18,17 +18,34 @@ export interface RecipientTokenData {
   attributes?: unknown;
 }
 
+export interface SenderTokenData {
+  name?: string | null;
+  email?: string | null;
+}
+
 export class CampaignService {
   constructor(private readonly repo: CampaignRepository) {}
 
   /**
-   * Replaces template variables: {{first_name}}, {{company_name}}, etc.
+   * Replaces template variables: {{first_name}}, {{company_name}}, {{sender_name}}, etc.
    */
   static renderTemplate(
     template: string,
     recipient: RecipientTokenData,
+    sender?: SenderTokenData | null,
   ): string {
     let result = template;
+    const senderName =
+      sender?.name ||
+      (recipient as any).senderName ||
+      (recipient as any).sender_name ||
+      "";
+    const senderEmail =
+      sender?.email ||
+      (recipient as any).senderEmail ||
+      (recipient as any).sender_email ||
+      "";
+
     const tokens: Record<string, string> = {
       first_name: recipient.firstName || "",
       last_name: recipient.lastName || "",
@@ -36,6 +53,9 @@ export class CampaignService {
       title: recipient.title || "",
       email: recipient.email || "",
       domain_url: recipient.domainUrl || "",
+      sender_name: senderName,
+      sender: senderName,
+      sender_email: senderEmail,
     };
 
     if (recipient.attributes && typeof recipient.attributes === "object") {
@@ -56,8 +76,12 @@ export class CampaignService {
     return result;
   }
 
-  renderTemplate(template: string, recipient: RecipientTokenData): string {
-    return CampaignService.renderTemplate(template, recipient);
+  renderTemplate(
+    template: string,
+    recipient: RecipientTokenData,
+    sender?: SenderTokenData | null,
+  ): string {
+    return CampaignService.renderTemplate(template, recipient, sender);
   }
 
   async resolveAudienceRecipients(data: CreateCampaign, userId: string) {
@@ -163,8 +187,8 @@ export class CampaignService {
       emailId: r.id,
       recipientEmail: r.email,
       recipientName: [r.firstName, r.lastName].filter(Boolean).join(" ") || null,
-      renderedSubject: this.renderTemplate(data.subject, r),
-      renderedBody: this.renderTemplate(data.body, r),
+      renderedSubject: this.renderTemplate(data.subject, r, sender),
+      renderedBody: this.renderTemplate(data.body, r, sender),
       status: QUEUE_ITEM_STATUS.PENDING,
       retryCount: 0,
     }));

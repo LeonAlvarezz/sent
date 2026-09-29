@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import {
   Button,
@@ -51,6 +51,69 @@ export function BulkSendPage() {
   const [selectedProfileId, setSelectedProfileId] = useState<string>("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+
+  const subjectInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const activeFieldRef = useRef<"subject" | "body">("body");
+  const cursorRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
+
+  const updateCursor = (
+    field: "subject" | "body",
+    el: HTMLInputElement | HTMLTextAreaElement,
+  ) => {
+    activeFieldRef.current = field;
+    if (el.selectionStart !== null && el.selectionEnd !== null) {
+      cursorRef.current = { start: el.selectionStart, end: el.selectionEnd };
+    }
+  };
+
+  const handleInsertTag = (tag: string) => {
+    const isSubject = activeFieldRef.current === "subject";
+
+    if (isSubject) {
+      const input = subjectInputRef.current;
+      const start =
+        input?.selectionStart ?? cursorRef.current.start ?? subject.length;
+      const end =
+        input?.selectionEnd ?? cursorRef.current.end ?? subject.length;
+
+      const before = subject.slice(0, start);
+      const after = subject.slice(end);
+      const nextValue = `${before}${tag}${after}`;
+      setSubject(nextValue);
+
+      const nextCursor = start + tag.length;
+      cursorRef.current = { start: nextCursor, end: nextCursor };
+
+      requestAnimationFrame(() => {
+        if (input) {
+          input.focus();
+          input.setSelectionRange(nextCursor, nextCursor);
+        }
+      });
+    } else {
+      const textarea = bodyTextareaRef.current;
+      const start =
+        textarea?.selectionStart ?? cursorRef.current.start ?? body.length;
+      const end =
+        textarea?.selectionEnd ?? cursorRef.current.end ?? body.length;
+
+      const before = body.slice(0, start);
+      const after = body.slice(end);
+      const nextValue = `${before}${tag}${after}`;
+      setBody(nextValue);
+
+      const nextCursor = start + tag.length;
+      cursorRef.current = { start: nextCursor, end: nextCursor };
+
+      requestAnimationFrame(() => {
+        if (textarea) {
+          textarea.focus();
+          textarea.setSelectionRange(nextCursor, nextCursor);
+        }
+      });
+    }
+  };
 
   // Auto-bind default sender when senders load
   useEffect(() => {
@@ -327,11 +390,16 @@ export function BulkSendPage() {
                 "{{company_name}}",
                 "{{title}}",
                 "{{domain_url}}",
+                "{{sender_name}}",
               ].map((tag) => (
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => setBody((prev) => prev + " " + tag)}
+                  onMouseDown={(e) => {
+                    // Prevent button click from stealing focus and losing cursor position
+                    e.preventDefault();
+                  }}
+                  onClick={() => handleInsertTag(tag)}
                   className="px-1.5 py-0.5 rounded bg-accent hover:bg-accent/80 font-mono text-[11px] border border-border text-foreground transition-colors cursor-pointer"
                 >
                   {tag}
@@ -345,9 +413,17 @@ export function BulkSendPage() {
               Subject Line <span className="text-destructive">*</span>
             </FieldLabel>
             <Input
+              ref={subjectInputRef}
               placeholder="e.g. Quick question regarding {{company_name}}"
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              onChange={(e) => {
+                setSubject(e.target.value);
+                updateCursor("subject", e.currentTarget);
+              }}
+              onFocus={(e) => updateCursor("subject", e.currentTarget)}
+              onClick={(e) => updateCursor("subject", e.currentTarget)}
+              onKeyUp={(e) => updateCursor("subject", e.currentTarget)}
+              onSelect={(e) => updateCursor("subject", e.currentTarget)}
               required
             />
           </Field>
@@ -357,10 +433,18 @@ export function BulkSendPage() {
               Email Body <span className="text-destructive">*</span>
             </FieldLabel>
             <Textarea
+              ref={bodyTextareaRef}
               placeholder="Hi {{first_name}},\n\nI came across {{company_name}} and wanted to connect..."
               rows={9}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => {
+                setBody(e.target.value);
+                updateCursor("body", e.currentTarget);
+              }}
+              onFocus={(e) => updateCursor("body", e.currentTarget)}
+              onClick={(e) => updateCursor("body", e.currentTarget)}
+              onKeyUp={(e) => updateCursor("body", e.currentTarget)}
+              onSelect={(e) => updateCursor("body", e.currentTarget)}
               required
             />
           </Field>

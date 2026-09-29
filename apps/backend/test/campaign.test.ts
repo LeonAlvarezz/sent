@@ -50,6 +50,34 @@ describe("Campaign Template Substitution", () => {
     const rendered = renderTemplate(template, recipient);
     expect(rendered).toBe("Hi , hope you are doing well.");
   });
+
+  it("substitutes {{sender_name}}, {{sender}}, and {{sender_email}} correctly", () => {
+    const template =
+      "Hi {{first_name}},\n\nBest regards,\n{{sender_name}} ({{sender_email}})\nFrom: {{sender}}";
+    const recipient = {
+      firstName: "Alex",
+      email: "alex@acme.com",
+    };
+    const sender = {
+      name: "Leon Hong",
+      email: "leon@eurasietravel.com",
+    };
+
+    const rendered = renderTemplate(template, recipient, sender);
+    expect(rendered).toBe(
+      "Hi Alex,\n\nBest regards,\nLeon Hong (leon@eurasietravel.com)\nFrom: Leon Hong",
+    );
+  });
+
+  it("handles empty sender gracefully when sender tokens are used", () => {
+    const template = "Best regards,\n{{sender_name}}";
+    const recipient = {
+      email: "alex@acme.com",
+    };
+
+    const rendered = renderTemplate(template, recipient);
+    expect(rendered).toBe("Best regards,\n");
+  });
 });
 
 describe("Campaign Audience Targeting Schemas", () => {
