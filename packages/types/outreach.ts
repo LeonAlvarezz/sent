@@ -222,6 +222,7 @@ export type ScrapeResult = v.InferOutput<typeof ScrapeResultSchema>;
 export const GenerateDraftSchema = v.object({
   targetUrl: v.optional(v.string()),
   pageContext: v.optional(v.string()),
+  siteName: v.optional(v.string()),
   recipientName: v.optional(v.string()),
   recipientEmail: v.optional(v.string()),
   pitchProfileId: v.optional(v.nullable(v.number())),

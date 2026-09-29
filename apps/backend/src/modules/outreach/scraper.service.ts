@@ -79,11 +79,8 @@ export class ScraperService {
       if (domain.toLowerCase() === "littlegreybox") {
         return "Little Grey Box";
       }
-      if (domain.toLowerCase() === "eurasietravel") {
-        return "Eurasie Travel";
-      }
       const words = domain
-        .replace(/[-_]/g, " ")
+        .replace(/[-_.]+/g, " ")
         .replace(/([a-z])([A-Z])/g, "$1 $2")
         .split(" ")
         .filter(Boolean);

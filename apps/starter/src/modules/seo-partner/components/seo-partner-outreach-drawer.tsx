@@ -75,6 +75,7 @@ export function SeoPartnerOutreachDrawer({
 
   // Form fields
   const [targetUrl, setTargetUrl] = useState("");
+  const [websiteName, setWebsiteName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [recipientName, setRecipientName] = useState("");
   const [customAngle, setCustomAngle] = useState("");
@@ -163,8 +164,9 @@ export function SeoPartnerOutreachDrawer({
     if (!open || !partner) return;
 
     setTargetUrl(partner.url || "");
+    setWebsiteName(partner.website || "");
     setRecipientEmail(partner.contactEmail || "");
-    setRecipientName(partner.website || "");
+    setRecipientName("");
     setSubject("");
     setBody("");
     setCustomAngle("");
@@ -195,7 +197,7 @@ export function SeoPartnerOutreachDrawer({
           }
 
           if (result.siteName && !partner.website) {
-            setRecipientName(result.siteName);
+            setWebsiteName(result.siteName);
           }
 
           if (
@@ -240,8 +242,8 @@ export function SeoPartnerOutreachDrawer({
       if (emails.length > 0 && !recipientEmail) {
         setRecipientEmail(emails[0]);
       }
-      if (result.siteName && !recipientName) {
-        setRecipientName(result.siteName);
+      if (result.siteName && !websiteName) {
+        setWebsiteName(result.siteName);
       }
 
       if (
@@ -266,6 +268,7 @@ export function SeoPartnerOutreachDrawer({
     try {
       const draft = await generateMutation.mutateAsync({
         targetUrl: targetUrl.trim() || undefined,
+        siteName: websiteName.trim() || partner?.website?.trim() || undefined,
         pageContext: pageContext.trim() || undefined,
         recipientName: recipientName.trim() || undefined,
         recipientEmail: recipientEmail.trim() || undefined,
@@ -324,7 +327,7 @@ export function SeoPartnerOutreachDrawer({
       await dispatchMutation.mutateAsync({
         senderId: selectedSenderId,
         recipientEmail: recipientEmail.trim(),
-        recipientName: recipientName.trim() || undefined,
+        recipientName: recipientName.trim() || websiteName.trim() || undefined,
         subject: subject.trim(),
         body: body.trim(),
         pitchProfileId: selectedPitchProfileId,
@@ -614,8 +617,18 @@ export function SeoPartnerOutreachDrawer({
           </div>
         )}
 
-        {/* Recipient Email & Recipient Name Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Website Name, Recipient Email & Recipient Name Inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Field>
+            <FieldLabel className="text-xs">Website Name</FieldLabel>
+            <Input
+              value={websiteName}
+              onChange={(e) => setWebsiteName(e.target.value)}
+              placeholder="e.g. Eurasietravel"
+              className="text-xs h-8"
+            />
+          </Field>
+
           <Field>
             <FieldLabel className="text-xs">
               Recipient Email <span className="text-destructive">*</span>
@@ -629,11 +642,13 @@ export function SeoPartnerOutreachDrawer({
           </Field>
 
           <Field>
-            <FieldLabel className="text-xs">Recipient / Site Name</FieldLabel>
+            <FieldLabel className="text-xs">
+              Recipient Name <span className="text-muted-foreground font-normal">(optional)</span>
+            </FieldLabel>
             <Input
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
-              placeholder="e.g. Alex or Site Editor"
+              placeholder="e.g. Alex"
               className="text-xs h-8"
             />
           </Field>

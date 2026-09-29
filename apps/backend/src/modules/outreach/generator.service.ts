@@ -22,16 +22,17 @@ export class GeneratorService {
       pitchProfile?.valueProposition ||
       "an inbound tour specialist and travel publisher covering Cambodia, Vietnam, Laos, Myanmar, and Thailand, specializing in private tailor-made itineraries and local experiential travel";
 
-    // Recipient & Site Name resolution
-    const siteName = this.extractSiteName(
-      payload.targetUrl,
-      payload.pageContext,
-    );
+    // Recipient & Site Name resolution:
+    // Uses whatever is in Website Name (payload.siteName) directly without formatting.
+    const siteName =
+      payload.siteName?.trim() ||
+      this.extractSiteName(payload.targetUrl, payload.pageContext);
+    const rawRecipient = payload.recipientName?.trim();
     const recipient =
-      payload.recipientName?.trim() &&
-      !["there", "alex", "alex vance"].includes(payload.recipientName.trim().toLowerCase())
-        ? payload.recipientName.trim()
-        : siteName;
+      rawRecipient && rawRecipient.toLowerCase() !== "there"
+        ? rawRecipient
+        : undefined;
+    const greetingName = recipient || siteName;
 
     // Tone resolution
     const tone =
@@ -68,7 +69,7 @@ export class GeneratorService {
               content: `You are an expert SEO and digital PR outreach specialist. Write personalized, high-converting 1-to-1 cold outreach emails for paid partnerships, link placements, and sponsored collaborations.
 
 You MUST structure the email body strictly with the following sections:
-1. Greeting: "Greeting ${siteName}," (or "Hi ${recipient}," for casual tone)
+1. Greeting: "Greeting ${greetingName}," (or "Hi ${greetingName}," for casual tone)
 2. Warm opening line (e.g. "I hope you’re having a great week!").
 3. Contextual personalization: Write an authentic, genuine 1-2 sentence compliment referencing ${siteName}. You MUST personalize this compliment using the actual scraped Page Context and Target URL provided in the user prompt:
    - Reference the actual article title, destination, guide topic, or photography/content focus found in the Page Context (e.g. "I’ve been reading ${siteName}, particularly your guide on [specific article/destination]...").
@@ -91,17 +92,22 @@ You MUST structure the email body strictly with the following sections:
 
 Tone Guidance:
 - If tone is "punchy" or "<60w": Keep body concise, crisp, and direct to the point while preserving the 3 numbered collaboration formats and rate card request.
-- If tone is "casual": Use a friendly, warm, conversational peer-to-peer tone ("Hi ${recipient},", "Hope you're having an awesome week!", enthusiastic compliment, friendly ask).
+- If tone is "casual": Use a friendly, warm, conversational peer-to-peer tone ("Hi ${greetingName},", "Hope you're having an awesome week!", enthusiastic compliment, friendly ask).
 - If tone is "value": Highlight dedicated partnership budget, mutual value proposition, high reader utility, and authoritative local resources.
 - If tone is "follow-up": Craft a polite follow-up checking in on the previous note, summarizing the 3 collaboration formats, and requesting their media kit and rate card.
 - If default/unspecified: Balanced, professional, and complete matching the reference structure.
+
+Naming & Formatting Rules:
+- ALWAYS address the greeting to "${greetingName}".
+- Use "${siteName}" exactly as provided for the website or publication name in the body and greeting fallback. Do NOT alter casing or invent spaces for "${siteName}".
 
 Output strictly valid JSON with keys "subject" and "body".`,
             },
             {
               role: "user",
               content: `Write outreach email:
-- Recipient / Site: ${recipient} (${siteName})
+- Recipient / Greeting Name: ${greetingName}
+- Target Site / Brand: ${siteName}
 - Target URL: ${payload.targetUrl || "none"}
 - Scraped Page Context: ${payload.pageContext ? payload.pageContext.slice(0, 1500) : "General travel site"}
 - Pitch Angle: ${payload.customAngle || "none"}
@@ -137,7 +143,7 @@ Output strictly valid JSON with keys "subject" and "body".`,
     // Fallback generator adhering strictly to the required structure across all 5 tones
     const fallback = this.generateFallbackDraft({
       siteName,
-      recipient,
+      greetingName,
       companyName,
       companyUrl,
       companyDesc,
@@ -156,7 +162,7 @@ Output strictly valid JSON with keys "subject" and "body".`,
 
   private generateFallbackDraft(opts: {
     siteName: string;
-    recipient: string;
+    greetingName: string;
     companyName: string;
     companyUrl: string;
     companyDesc: string;
@@ -167,7 +173,7 @@ Output strictly valid JSON with keys "subject" and "body".`,
   }): { subject: string; body: string } {
     const {
       siteName,
-      recipient,
+      greetingName,
       companyName,
       companyUrl,
       companyDesc,
@@ -191,7 +197,7 @@ Output strictly valid JSON with keys "subject" and "body".`,
     // 1. PUNCHY (<60w)
     if (isPunchy) {
       const subject = `Paid Collaboration & Link Placement with ${siteName}`;
-      const body = `Greeting ${siteName},
+      const body = `Greeting ${greetingName},
 
 I hope you’re having a great week!
 
@@ -216,7 +222,6 @@ ${companyUrl}`;
 
     // 2. CASUAL
     if (isCasual) {
-      const greetingName = recipient && recipient !== "there" ? recipient : siteName;
       const subject = `Collaboration & partnership idea for ${siteName} 🤝`;
       const body = `Hi ${greetingName},
 
@@ -245,7 +250,7 @@ ${companyUrl}`;
     // 3. VALUE-FIRST
     if (isValue) {
       const subject = `Paid Partnership & Sponsorship Inquiry: ${companyName} x ${siteName}`;
-      const body = `Greeting ${siteName},
+      const body = `Greeting ${greetingName},
 
 I hope you’re having a productive week!
 
@@ -272,7 +277,7 @@ ${companyUrl}`;
     // 4. FOLLOW-UP
     if (isFollowUp) {
       const subject = `Following up: Partnership & Content Collaboration with ${siteName}`;
-      const body = `Greeting ${siteName},
+      const body = `Greeting ${greetingName},
 
 I hope you’re having a great week!
 
@@ -296,7 +301,7 @@ ${companyUrl}`;
 
     // 5. DEFAULT / STANDARD (Matches user specification 100%)
     const subject = `Partnership & Content Collaboration with ${siteName}`;
-    const body = `Greeting ${siteName}, 
+    const body = `Greeting ${greetingName}, 
 
 I hope you’re having a great week!
 
@@ -324,18 +329,22 @@ ${companyUrl}`;
   private extractSiteName(urlStr?: string, pageContext?: string): string {
     // 1. From page title / context if it contains Brand separator
     if (pageContext) {
-      if (pageContext.includes(" - ")) {
-        const parts = pageContext.split(" - ");
-        const candidate = parts[parts.length - 1].trim();
-        if (candidate.length >= 2 && candidate.length <= 40 && !candidate.toLowerCase().includes("page")) {
-          return candidate;
+      const titleMatch = pageContext.match(/(?:Article Title|Title|Heading):\s*([^\n\r]+)/i);
+      if (titleMatch && titleMatch[1]) {
+        const titleLine = titleMatch[1].trim();
+        if (titleLine.includes(" - ")) {
+          const parts = titleLine.split(" - ");
+          const candidate = parts[parts.length - 1].trim();
+          if (candidate.length >= 2 && candidate.length <= 40 && !candidate.toLowerCase().includes("page")) {
+            return candidate;
+          }
         }
-      }
-      if (pageContext.includes(" | ")) {
-        const parts = pageContext.split(" | ");
-        const candidate = parts[parts.length - 1].trim();
-        if (candidate.length >= 2 && candidate.length <= 40 && !candidate.toLowerCase().includes("page")) {
-          return candidate;
+        if (titleLine.includes(" | ")) {
+          const parts = titleLine.split(" | ");
+          const candidate = parts[parts.length - 1].trim();
+          if (candidate.length >= 2 && candidate.length <= 40 && !candidate.toLowerCase().includes("page")) {
+            return candidate;
+          }
         }
       }
     }
@@ -349,11 +358,8 @@ ${companyUrl}`;
         if (domain.toLowerCase() === "littlegreybox") {
           return "Little Grey Box";
         }
-        if (domain.toLowerCase() === "eurasietravel") {
-          return "Eurasie Travel";
-        }
         const words = domain
-          .replace(/[-_]/g, " ")
+          .replace(/[-_.]+/g, " ")
           .replace(/([a-z])([A-Z])/g, "$1 $2")
           .split(" ")
           .filter(Boolean);

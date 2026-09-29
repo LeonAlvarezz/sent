@@ -162,6 +162,56 @@ describe("GeneratorService Email Generation & Tone Presets", () => {
     expect(draft.body).toContain('Cambodia Itinerary 2 Weeks');
     expect(draft.body).not.toContain("Halong Bay");
   });
+
+  it("uses recipientName in greeting across all 5 tone variants", async () => {
+    const tones = ["default", "punchy", "casual", "value", "follow-up"] as const;
+
+    for (const tone of tones) {
+      const draft = await generator.generateDraft(
+        {
+          targetUrl: "https://littlegreybox.net/vietnam",
+          recipientName: "Alex",
+          toneModifier: tone,
+        },
+        "test-user-1",
+      );
+
+      if (tone === "casual") {
+        expect(draft.body).toContain("Hi Alex,");
+      } else {
+        expect(draft.body).toContain("Greeting Alex,");
+      }
+    }
+  });
+
+  it("preserves exact Website Name without altering casing/spaces and greets Website Name when recipientName is absent", async () => {
+    const draft = await generator.generateDraft(
+      {
+        targetUrl: "https://eurasietravel.com/blog",
+        siteName: "Eurasietravel",
+      },
+      "test-user-1",
+    );
+
+    expect(draft.body).toContain("Greeting Eurasietravel,");
+    expect(draft.body).toContain("collaboration with Eurasietravel");
+    expect(draft.body).not.toContain("eurasietravel,");
+  });
+
+  it("greets recipientName when present while referring to exact Website Name in pitch body", async () => {
+    const draft = await generator.generateDraft(
+      {
+        targetUrl: "https://eurasietravel.com/blog",
+        siteName: "Eurasietravel",
+        recipientName: "Alex",
+      },
+      "test-user-1",
+    );
+
+    expect(draft.body).toContain("Greeting Alex,");
+    expect(draft.body).toContain("collaboration with Eurasietravel");
+    expect(draft.body).not.toContain("Greeting Eurasietravel,");
+  });
 });
 
 describe("ScraperService Site Name Extraction", () => {
@@ -169,7 +219,7 @@ describe("ScraperService Site Name Extraction", () => {
 
   it("extracts clean site name from domain URL", () => {
     expect(scraper.extractSiteNameFromUrl("https://littlegreybox.net")).toBe("Little Grey Box");
-    expect(scraper.extractSiteNameFromUrl("http://www.eurasietravel.com/tours")).toBe("Eurasie Travel");
+    expect(scraper.extractSiteNameFromUrl("http://www.eurasietravel.com/tours")).toBe("Eurasietravel");
     expect(scraper.extractSiteNameFromUrl("https://southeast-asia-guide.com")).toBe("Southeast Asia Guide");
   });
 });
