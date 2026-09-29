@@ -22,7 +22,11 @@ interface DashboardKpiStatsProps {
   partners: SeoPartner[];
   logs: Array<{ log: OutreachLog; senderName?: string; pitchProfileName?: string }>;
   campaigns: CampaignWithRelations[];
-  isLoading: boolean;
+  isLoading?: boolean;
+  isLoadingEmails?: boolean;
+  isLoadingPartners?: boolean;
+  isLoadingLogs?: boolean;
+  isLoadingCampaigns?: boolean;
 }
 
 export function DashboardKpiStats({
@@ -32,6 +36,10 @@ export function DashboardKpiStats({
   logs,
   campaigns,
   isLoading,
+  isLoadingEmails = false,
+  isLoadingPartners = false,
+  isLoadingLogs = false,
+  isLoadingCampaigns = false,
 }: DashboardKpiStatsProps) {
   // 1. Total Contacts & Replied
   const totalContacts = emails.length;
@@ -78,6 +86,7 @@ export function DashboardKpiStats({
     {
       title: "Total Contacts",
       value: totalContacts,
+      loading: isLoading ?? isLoadingEmails,
       subtitle: `Across ${emailLists.length} audience list${emailLists.length === 1 ? "" : "s"}`,
       badge:
         repliedContacts > 0
@@ -90,6 +99,7 @@ export function DashboardKpiStats({
     {
       title: "Outreach Dispatched",
       value: totalOutreach,
+      loading: isLoading ?? isLoadingLogs,
       subtitle: `${deliveredOutreach} delivered (${deliveryRate}%)`,
       badge: `${deliveryRate}% success`,
       badgeColor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -99,6 +109,7 @@ export function DashboardKpiStats({
     {
       title: "SEO Partners",
       value: totalPartners,
+      loading: isLoading ?? isLoadingPartners,
       subtitle: `${outreachedPartners} contacted (${partnerCoverage}% coverage)`,
       badge: avgDr > 0 ? `Avg DR ${avgDr}` : `${totalPartners} partners`,
       badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -108,6 +119,7 @@ export function DashboardKpiStats({
     {
       title: "Active Campaigns",
       value: activeCampaigns.length,
+      loading: isLoading ?? isLoadingCampaigns,
       subtitle: `${totalCampaigns} total campaigns created`,
       badge:
         activeCampaigns.length > 0
@@ -140,14 +152,14 @@ export function DashboardKpiStats({
             </div>
 
             <div className="mt-2.5 flex items-baseline gap-2">
-              {isLoading ? (
+              {kpi.loading ? (
                 <Skeleton className="h-8 w-24" />
               ) : (
                 <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                   {formatNumber(kpi.value)}
                 </span>
               )}
-              {!isLoading && (
+              {!kpi.loading && (
                 <span
                   className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${kpi.badgeColor}`}
                 >
@@ -157,7 +169,7 @@ export function DashboardKpiStats({
             </div>
 
             <p className="mt-1.5 text-xs text-muted-foreground truncate">
-              {isLoading ? <Skeleton className="h-4 w-36" /> : kpi.subtitle}
+              {kpi.loading ? <Skeleton className="h-4 w-36" /> : kpi.subtitle}
             </p>
           </Card>
         );

@@ -9,23 +9,53 @@ import type {
   SignInEmailTotpRedirectResponse,
 } from "@z3/types";
 
+const USER_CACHE_KEY = "sent_cached_user";
+
+function getCachedUser(): UserProfile | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedUser(user: UserProfile | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (user) {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(USER_CACHE_KEY);
+    }
+  } catch {}
+}
+
 export const authStrategy: SessionAuthStrategy = new SessionAuthStrategy({
+  getInitialUser: getCachedUser,
+
   onInitialize: async () => {
     try {
       const res =
         await apiClient.get<SessionResponse | null>("/auth/get-session");
       if (!res?.user) {
+        setCachedUser(null);
         queryClient.clear();
         return null;
       }
-      return {
+      const profile: UserProfile = {
         id: res.user.id,
         email: res.user.email,
         name: res.user.name,
         avatarUrl: res.user.image ?? undefined,
         role: res.user.role,
       };
+      setCachedUser(profile);
+      return profile;
     } catch {
+      setCachedUser(null);
       queryClient.clear();
       return null;
     }
@@ -45,13 +75,15 @@ export const authStrategy: SessionAuthStrategy = new SessionAuthStrategy({
       throw error;
     }
 
-    return {
+    const profile: UserProfile = {
       id: data.user.id,
       email: data.user.email,
       name: data.user.name,
       avatarUrl: data.user.image ?? undefined,
       role: data.user.role,
     };
+    setCachedUser(profile);
+    return profile;
   },
 
   onLogout: async () => {
@@ -60,6 +92,7 @@ export const authStrategy: SessionAuthStrategy = new SessionAuthStrategy({
     } catch (error) {
       console.warn("Server sign-out warning:", error);
     } finally {
+      setCachedUser(null);
       queryClient.clear();
     }
   },

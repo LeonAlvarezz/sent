@@ -6,6 +6,7 @@ export interface SessionStrategyOptions {
   onInitialize: () => Promise<UserProfile | null>;
   onLogin: (payload: SignInEmail) => Promise<UserProfile>;
   onLogout: () => Promise<void>;
+  getInitialUser?: () => UserProfile | null;
   getCsrfToken?: () => string | null;
   csrfHeaderName?: string;
 }
@@ -15,6 +16,7 @@ export class SessionAuthStrategy implements AuthStrategy {
   private onInitialize: () => Promise<UserProfile | null>;
   private onLogin: (payload: SignInEmail) => Promise<UserProfile>;
   private onLogout: () => Promise<void>;
+  getInitialUser?: () => UserProfile | null;
   private getCsrfToken?: () => string | null;
   private csrfHeaderName: string;
 
@@ -22,6 +24,7 @@ export class SessionAuthStrategy implements AuthStrategy {
     this.onInitialize = options.onInitialize;
     this.onLogin = options.onLogin;
     this.onLogout = options.onLogout;
+    this.getInitialUser = options.getInitialUser;
     this.getCsrfToken = options.getCsrfToken;
     this.csrfHeaderName = options.csrfHeaderName ?? "X-CSRF-Token";
   }

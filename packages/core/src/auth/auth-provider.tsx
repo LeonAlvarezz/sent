@@ -28,19 +28,35 @@ export interface AuthProviderProps {
   strategy: AuthStrategy;
   children: React.ReactNode;
   onUnauthenticated?: () => void;
+  initialUser?: UserProfile | null;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
   strategy,
   children,
   onUnauthenticated,
+  initialUser,
 }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    if (initialUser !== undefined) return initialUser;
+    if (strategy.getInitialUser) {
+      try {
+        return strategy.getInitialUser();
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => (initialUser !== undefined ? !initialUser : strategy.getInitialUser ? !strategy.getInitialUser() : true));
   const [error, setError] = useState<Error | null>(null);
+  const hasUserRef = React.useRef(Boolean(user));
+  hasUserRef.current = Boolean(user);
 
   const initialize = useCallback(async () => {
-    setIsLoading(true);
+    if (!hasUserRef.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const userProfile = await strategy.initialize();

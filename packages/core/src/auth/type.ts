@@ -6,6 +6,7 @@ export interface AuthStrategy {
   initialize: () => Promise<UserProfile | null>;
   login: (payload: SignInEmail) => Promise<UserProfile>;
   logout: () => Promise<void>;
+  getInitialUser?: () => UserProfile | null;
   refreshToken?: () => Promise<string | null>;
   getToken?: () => string | null;
   getAuthHeaders?: () => Record<string, string>;
