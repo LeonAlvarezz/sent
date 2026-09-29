@@ -55,7 +55,10 @@ export function BulkSendPage() {
   const subjectInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
   const activeFieldRef = useRef<"subject" | "body">("body");
-  const cursorRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
+  const cursorRef = useRef<{ start: number; end: number }>({
+    start: 0,
+    end: 0,
+  });
 
   const updateCursor = (
     field: "subject" | "body",
@@ -72,10 +75,8 @@ export function BulkSendPage() {
 
     if (isSubject) {
       const input = subjectInputRef.current;
-      const start =
-        input?.selectionStart ?? cursorRef.current.start ?? subject.length;
-      const end =
-        input?.selectionEnd ?? cursorRef.current.end ?? subject.length;
+      const start = input?.selectionStart ?? cursorRef.current.start;
+      const end = input?.selectionEnd ?? cursorRef.current.end;
 
       const before = subject.slice(0, start);
       const after = subject.slice(end);
@@ -93,10 +94,8 @@ export function BulkSendPage() {
       });
     } else {
       const textarea = bodyTextareaRef.current;
-      const start =
-        textarea?.selectionStart ?? cursorRef.current.start ?? body.length;
-      const end =
-        textarea?.selectionEnd ?? cursorRef.current.end ?? body.length;
+      const start = textarea?.selectionStart ?? cursorRef.current.start;
+      const end = textarea?.selectionEnd ?? cursorRef.current.end;
 
       const before = body.slice(0, start);
       const after = body.slice(end);
