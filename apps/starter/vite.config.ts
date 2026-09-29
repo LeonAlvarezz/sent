@@ -21,4 +21,23 @@ export default defineConfig({
       ),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
+            return "vendor-react";
+          }
+          if (
+            /[\\/]node_modules[\\/](recharts|d3-[^\\/]+|@reduxjs[\\/]toolkit|immer|decimal\.js-light)[\\/]/.test(
+              id,
+            )
+          ) {
+            return "vendor-charts";
+          }
+        },
+      },
+    },
+  },
 });
+
