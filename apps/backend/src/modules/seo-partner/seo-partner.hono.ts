@@ -9,6 +9,8 @@ export type SeoPartnerEnv = {
   Bindings: {
     DB: D1Database;
     OPENAI_API_KEY?: string;
+    DATAFORSEO_LOGIN?: string;
+    DATAFORSEO_PASSWORD?: string;
   };
   Variables: {
     user: {
@@ -38,5 +40,6 @@ seoPartnerRouter.get("/targets", (c) => getController(c.env.DB).getTargets(c));
 seoPartnerRouter.get("/:id", (c) => getController(c.env.DB).getPartner(c));
 seoPartnerRouter.post("/", (c) => getController(c.env.DB).createPartner(c));
 seoPartnerRouter.post("/batch", (c) => getController(c.env.DB).batchImport(c));
+seoPartnerRouter.post("/competitor-backlinks", (c) => getController(c.env.DB).getCompetitorBacklinks(c));
 seoPartnerRouter.put("/:id", (c) => getController(c.env.DB).updatePartner(c));
 seoPartnerRouter.delete("/:id", (c) => getController(c.env.DB).deletePartner(c));

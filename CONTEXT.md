@@ -71,3 +71,22 @@ _Avoid_: Follow-up trigger
 **Pitch Profile**:
 A saved configuration of value propositions, target assets, tone rules, and few-shot examples used to condition AI draft generation.
 _Avoid_: Prompt template, AI persona, pitch preset
+
+## UI & Layout Conventions
+
+**Modal Headers & Footers**:
+- No top/bottom divider borders (`border-t`, `border-b`).
+- Vertical spacing via padding only (`pb-3`, `pt-3`) per `apps/starter/src/modules/seo-partner/components/seo-partner-modal.tsx`.
+
+**Table Properties Button**:
+- The "Properties" button (`DataTable.ViewOptions` / column toggle) must be detached from the table container.
+- Do not box the toolbar into the same background (`bg-card`) as the table.
+
+**Empty State Descriptions**:
+- Concise copy only: maximum 1 paragraph, strictly 2 lines or fewer.
+- Avoid long explanatory paragraphs.
+
+**Buttons**:
+- Never use native `<button>` primitives anywhere.
+- Always use the `<Button>` component from `@z3/admin-core` with appropriate variants (`default`, `outline`, `ghost`, etc.).
+

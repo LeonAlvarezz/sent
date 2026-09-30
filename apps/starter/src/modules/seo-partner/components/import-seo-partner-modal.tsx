@@ -244,7 +244,7 @@ export function ImportSeoPartnerModal({
       }}
       size="xl"
     >
-      <ModalHeader className="pb-3 border-b border-border">
+      <ModalHeader className="pb-3">
         <ModalTitle>Import SEO Partners</ModalTitle>
         <ModalDescription>
           Upload your existing SEO partner spreadsheet (.xlsx, .xls, .csv).
@@ -311,7 +311,7 @@ export function ImportSeoPartnerModal({
         )}
       </ModalBody>
 
-      <ModalFooter className="pt-3 border-t border-border flex justify-end gap-2">
+      <ModalFooter className="pt-3 flex justify-end gap-2">
         <Button
           type="button"
           variant="outline"

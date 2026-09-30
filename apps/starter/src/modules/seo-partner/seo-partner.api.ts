@@ -6,6 +6,8 @@ import type {
   ListSeoPartnersQuery,
   SeoPartner,
   UpdateSeoPartner,
+  CompetitorBacklinksQuery,
+  CompetitorBacklinkItem,
 } from "@z3/types";
 
 export const SEO_PARTNER_KEYS = {
@@ -81,5 +83,20 @@ export function useDeleteSeoPartnerMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SEO_PARTNER_KEYS.all });
     },
+  });
+}
+
+export interface CompetitorBacklinksResult {
+  items: CompetitorBacklinkItem[];
+  total: number;
+}
+
+export function useCompetitorBacklinksMutation() {
+  return useMutation({
+    mutationFn: (data: CompetitorBacklinksQuery) =>
+      apiClient.post<CompetitorBacklinksResult>(
+        "/seo-partners/competitor-backlinks",
+        data,
+      ),
   });
 }

@@ -226,6 +226,16 @@ export function SeoPartnerPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => navigate({ to: "/backlink-research" })}
+            className="gap-1.5"
+          >
+            <SearchIcon className="size-4 text-primary" />
+            <span>Backlink Research</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setIsImportOpen(true)}
             className="gap-1.5"
           >

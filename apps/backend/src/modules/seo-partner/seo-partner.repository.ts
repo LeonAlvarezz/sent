@@ -229,4 +229,27 @@ export class SeoPartnerRepository {
       .map((r) => r.backlinkFor)
       .filter((t): t is string => Boolean(t));
   }
+
+  async getExistingWebsites(userId: string): Promise<Set<string>> {
+    const results = await this.db
+      .select({ website: seoPartner.website, url: seoPartner.url })
+      .from(seoPartner)
+      .where(eq(seoPartner.userId, userId));
+
+    const set = new Set<string>();
+    for (const r of results) {
+      if (r.website) {
+        set.add(r.website.toLowerCase().trim().replace(/^www\./, ""));
+      }
+      if (r.url) {
+        try {
+          const parsed = new URL(r.url.startsWith("http") ? r.url : `https://${r.url}`);
+          set.add(parsed.hostname.toLowerCase().replace(/^www\./, ""));
+        } catch {
+          set.add(r.url.toLowerCase().trim().replace(/^www\./, ""));
+        }
+      }
+    }
+    return set;
+  }
 }

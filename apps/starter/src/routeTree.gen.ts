@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedBacklinkResearchRouteImport } from './routes/_authenticated/backlink-research'
 import { Route as AuthenticatedBulkSendRouteImport } from './routes/_authenticated/bulk-send'
 import { Route as AuthenticatedCampaignQueueRouteImport } from './routes/_authenticated/campaign-queue'
 import { Route as AuthenticatedEmailsRouteImport } from './routes/_authenticated/emails'
@@ -38,6 +39,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBacklinkResearchRoute =
+  AuthenticatedBacklinkResearchRouteImport.update({
+    id: '/backlink-research',
+    path: '/backlink-research',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBulkSendRoute = AuthenticatedBulkSendRouteImport.update({
   id: '/bulk-send',
   path: '/bulk-send',
@@ -103,6 +110,7 @@ const AuthenticatedSettingsMailRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/backlink-research': typeof AuthenticatedBacklinkResearchRoute
   '/bulk-send': typeof AuthenticatedBulkSendRoute
   '/campaign-queue': typeof AuthenticatedCampaignQueueRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/backlink-research': typeof AuthenticatedBacklinkResearchRoute
   '/bulk-send': typeof AuthenticatedBulkSendRoute
   '/campaign-queue': typeof AuthenticatedCampaignQueueRoute
   '/emails': typeof AuthenticatedEmailsRoute
@@ -134,6 +143,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/_authenticated/backlink-research': typeof AuthenticatedBacklinkResearchRoute
   '/_authenticated/bulk-send': typeof AuthenticatedBulkSendRoute
   '/_authenticated/campaign-queue': typeof AuthenticatedCampaignQueueRoute
   '/_authenticated/emails': typeof AuthenticatedEmailsRoute
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/backlink-research'
     | '/bulk-send'
     | '/campaign-queue'
     | '/emails'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/backlink-research'
     | '/bulk-send'
     | '/campaign-queue'
     | '/emails'
@@ -182,6 +194,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/_authenticated/backlink-research'
     | '/_authenticated/bulk-send'
     | '/_authenticated/campaign-queue'
     | '/_authenticated/emails'
@@ -222,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/backlink-research': {
+      id: '/_authenticated/backlink-research'
+      path: '/backlink-research'
+      fullPath: '/backlink-research'
+      preLoaderRoute: typeof AuthenticatedBacklinkResearchRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/bulk-send': {
@@ -305,6 +325,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedBacklinkResearchRoute: typeof AuthenticatedBacklinkResearchRoute
   AuthenticatedBulkSendRoute: typeof AuthenticatedBulkSendRoute
   AuthenticatedCampaignQueueRoute: typeof AuthenticatedCampaignQueueRoute
   AuthenticatedEmailsRoute: typeof AuthenticatedEmailsRoute
@@ -320,6 +341,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedBacklinkResearchRoute: AuthenticatedBacklinkResearchRoute,
   AuthenticatedBulkSendRoute: AuthenticatedBulkSendRoute,
   AuthenticatedCampaignQueueRoute: AuthenticatedCampaignQueueRoute,
   AuthenticatedEmailsRoute: AuthenticatedEmailsRoute,

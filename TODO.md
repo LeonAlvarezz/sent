@@ -14,7 +14,8 @@
   - Grant standard `user` access to Bulk Email (Audiences, Bulk Send, Queue) and Settings.
   - Enforce permissions across navigation items, route loaders/guards, and backend API endpoints.
 
-
-- Integrated Khmer player movement, attack, dash and death animations.
-- Built the Angkor exterior and playable temple interior; improved jungle coverage and terrain blending.
-- Fixed food pickup and blank HUD issues, randomized enemy loot, updated audio and resolved progression merge conflicts.
+- [x] **Competitor Backlink Discovery & Partner Outreach (DataForSEO)**
+  - Integrate DataForSEO Backlinks API (`/v3/backlinks/referring_domains/live`) in `apps/backend`.
+  - Add backend endpoint `POST /api/seo-partners/competitor-backlinks` to extract linking partner domains, DR, and anchor text.
+  - Add "Competitor Spy / Import" modal in `apps/starter` SEO Partner module to search competitor domain and preview/import partners directly into `seo_partner` table.
+  - Feed imported competitor link partners directly into `SeoPartnerOutreachDrawer` for auto-scraping emails and 1-click AI pitching.

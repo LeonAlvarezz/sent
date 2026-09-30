@@ -183,7 +183,9 @@ export function SeoPartnerOutreachDrawer({
           if (!isSubscribed) return;
           const contextParts = [
             result.title ? `Title: ${result.title}` : "",
-            result.h1 && result.h1 !== result.title ? `Heading: ${result.h1}` : "",
+            result.h1 && result.h1 !== result.title
+              ? `Heading: ${result.h1}`
+              : "",
             result.description ? `Description: ${result.description}` : "",
             result.textSnippet ? `Content: ${result.textSnippet}` : "",
           ].filter(Boolean);
@@ -268,7 +270,7 @@ export function SeoPartnerOutreachDrawer({
     try {
       const draft = await generateMutation.mutateAsync({
         targetUrl: targetUrl.trim() || undefined,
-        siteName: websiteName.trim() || partner?.website?.trim() || undefined,
+        siteName: websiteName.trim() || partner?.website.trim() || undefined,
         pageContext: pageContext.trim() || undefined,
         recipientName: recipientName.trim() || undefined,
         recipientEmail: recipientEmail.trim() || undefined,
@@ -581,13 +583,15 @@ export function SeoPartnerOutreachDrawer({
               protected). Fill recipient details below or click{" "}
               <strong>AI Draft</strong>.
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setScrapeNoResult(false)}
-              className="underline hover:opacity-75 shrink-0 text-[11px]"
+              className="h-auto p-0 underline hover:opacity-75 shrink-0 text-[11px]"
             >
               Dismiss
-            </button>
+            </Button>
           </div>
         )}
 
@@ -600,18 +604,18 @@ export function SeoPartnerOutreachDrawer({
             {candidateEmails.map((email) => {
               const isSelected = recipientEmail === email;
               return (
-                <button
+                <Button
                   key={email}
                   type="button"
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setRecipientEmail(email)}
-                  className={`text-xs px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${
-                    isSelected
-                      ? "bg-primary text-primary-foreground border-primary font-medium"
-                      : "bg-background hover:bg-accent text-foreground border-border"
+                  className={`h-6 text-xs px-2 py-0.5 rounded-full ${
+                    isSelected ? "font-medium" : ""
                   }`}
                 >
                   {email}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -643,7 +647,10 @@ export function SeoPartnerOutreachDrawer({
 
           <Field>
             <FieldLabel className="text-xs">
-              Recipient Name <span className="text-muted-foreground font-normal">(optional)</span>
+              Recipient Name{" "}
+              <span className="text-muted-foreground font-normal">
+                (optional)
+              </span>
             </FieldLabel>
             <Input
               value={recipientName}

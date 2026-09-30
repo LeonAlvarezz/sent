@@ -84,3 +84,27 @@ export const ListSeoPartnersQuerySchema = v.object({
 });
 
 export type ListSeoPartnersQuery = v.InferInput<typeof ListSeoPartnersQuerySchema>;
+
+export const CompetitorBacklinksQuerySchema = v.object({
+  targetUrl: v.pipe(v.string(), v.minLength(1, "Target URL or domain is required")),
+  limit: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(100)), 50),
+  minDr: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(100))),
+  dofollowOnly: v.optional(v.boolean(), true),
+});
+
+export type CompetitorBacklinksQuery = v.InferInput<typeof CompetitorBacklinksQuerySchema>;
+
+export const CompetitorBacklinkItemSchema = v.object({
+  domain: v.string(),
+  pageTitle: v.optional(v.string()),
+  referringUrl: v.string(),
+  targetUrl: v.string(),
+  anchor: v.string(),
+  textPre: v.optional(v.string()),
+  textPost: v.optional(v.string()),
+  dr: v.number(),
+  dofollow: v.boolean(),
+  isExistingPartner: v.boolean(),
+});
+
+export type CompetitorBacklinkItem = v.InferOutput<typeof CompetitorBacklinkItemSchema>;

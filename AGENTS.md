@@ -56,6 +56,31 @@ To prevent fragmented, duplicated, and scattered utility functions across featur
 
 ---
 
+## 3. UI & Component Design Conventions (MANDATORY)
+
+To prevent recurring design inconsistencies across views:
+
+### Rules of Engagement
+
+1. **Modal Header & Footer (Zero Divider Borders)**:
+   - **NEVER** add `border-t` or `border-b` dividers to `<ModalHeader>` or `<ModalFooter>`.
+   - Maintain clean vertical spacing via padding only (e.g. `<ModalHeader className="pb-3">` and `<ModalFooter className="pt-3 flex justify-end gap-2">`).
+   - Canonical reference: `apps/starter/src/modules/seo-partner/components/seo-partner-modal.tsx`.
+
+2. **Table Properties Button & Toolbar (Detached Shell)**:
+   - The "Properties" button (`DataTable.ViewOptions` / column toggle) and table toolbar actions must remain **detached** from the table container.
+   - **NEVER** package the Properties button or table toolbar inside a box sharing the table's card background (`bg-card` with borders). Always place it in an unbordered, detached toolbar row (`<DataTable.Toolbar>` or detached row above `<DataTable>`).
+
+3. **Empty State Description Copy (Ultra-Concise)**:
+   - When rendering empty guidance screens, placeholder states, or zero-result tables, descriptions must **NEVER** be wordy or overly verbose.
+   - Strict limit: **Max 1 paragraph, strictly 2 lines or fewer**. Be direct, action-oriented, and punchy.
+
+4. **Never Use Native `<button>` Primitives (Strict Rule)**:
+   - **NEVER** use raw HTML `<button>` elements anywhere in feature pages, components, dialogs, or tables.
+   - **ALWAYS** import and use `<Button>` from `@z3/admin-core` with standardized variants (`default`, `outline`, `ghost`, `secondary`, `destructive`) and sizes (`sm`, `md`, `lg`).
+
+---
+
 ## Workspace Quick Reference Map
 
 ### UI Components (`@z3/admin-core`)

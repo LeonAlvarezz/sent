@@ -7,7 +7,9 @@ import {
   ImportSeoPartnersPayloadSchema,
   ListSeoPartnersQuerySchema,
   UpdateSeoPartnerSchema,
+  CompetitorBacklinksQuerySchema,
 } from "@z3/types";
+import { DataForSeoService } from "./dataforseo.service";
 import { BadRequestException } from "@/lib";
 
 export class SeoPartnerController {
@@ -28,7 +30,10 @@ export class SeoPartnerController {
     };
 
     const parsedQuery = v.parse(ListSeoPartnersQuerySchema, rawQuery);
-    const { partners, total } = await this.service.getPartners(user.id, parsedQuery);
+    const { partners, total } = await this.service.getPartners(
+      user.id,
+      parsedQuery,
+    );
 
     return c.json({
       success: true,
@@ -75,7 +80,10 @@ export class SeoPartnerController {
     const body = await c.req.json();
     const payload = v.parse(ImportSeoPartnersPayloadSchema, body);
 
-    const inserted = await this.service.batchInsertPartners(payload.partners, user.id);
+    const inserted = await this.service.batchInsertPartners(
+      payload.partners,
+      user.id,
+    );
     return c.json({
       success: true,
       data: inserted,
@@ -113,6 +121,47 @@ export class SeoPartnerController {
       success: true,
       data: deleted,
       message: `Partner "${deleted.website}" deleted successfully`,
+    });
+  };
+
+  getCompetitorBacklinks = async (c: Context<SeoPartnerEnv>) => {
+    const user = c.get("user");
+    const body = await c.req.json();
+    const payload = v.parse(CompetitorBacklinksQuerySchema, body);
+
+    console.log({
+      login: c.env.DATAFORSEO_LOGIN,
+      password: c.env.DATAFORSEO_PASSWORD,
+    });
+
+    const dataForSeo = new DataForSeoService(
+      c.env.DATAFORSEO_LOGIN,
+      c.env.DATAFORSEO_PASSWORD,
+    );
+
+    if (!dataForSeo.isConfigured()) {
+      return c.json(
+        {
+          success: false,
+          message:
+            "DataForSEO environment variables not provided. Please configure DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD in backend secrets.",
+        },
+        400,
+      );
+    }
+
+    const result = await this.service.getCompetitorBacklinks(
+      user.id,
+      payload,
+      dataForSeo,
+    );
+
+    return c.json({
+      success: true,
+      data: {
+        items: result.items,
+        total: result.totalCount,
+      },
     });
   };
 }

@@ -1,5 +1,11 @@
 import { SeoPartnerRepository, type ListSeoPartnersOptions } from "./seo-partner.repository";
-import type { CreateSeoPartner, UpdateSeoPartner } from "@z3/types";
+import { DataForSeoService } from "./dataforseo.service";
+import type {
+  CreateSeoPartner,
+  UpdateSeoPartner,
+  CompetitorBacklinksQuery,
+  CompetitorBacklinkItem,
+} from "@z3/types";
 import { NotFoundException, BadRequestException } from "@/lib";
 
 export class SeoPartnerService {
@@ -50,5 +56,29 @@ export class SeoPartnerService {
 
   async getUniqueBacklinkTargets(userId: string) {
     return this.repo.getUniqueBacklinkTargets(userId);
+  }
+
+  async getCompetitorBacklinks(
+    userId: string,
+    query: CompetitorBacklinksQuery,
+    dataForSeo: DataForSeoService,
+  ): Promise<{ items: CompetitorBacklinkItem[]; totalCount: number }> {
+    const [result, existingWebsites] = await Promise.all([
+      dataForSeo.getCompetitorBacklinks(query),
+      this.repo.getExistingWebsites(userId),
+    ]);
+
+    const items: CompetitorBacklinkItem[] = result.items.map((item) => {
+      const cleanDomain = item.domain.toLowerCase().trim().replace(/^www\./, "");
+      return {
+        ...item,
+        isExistingPartner: existingWebsites.has(cleanDomain),
+      };
+    });
+
+    return {
+      items,
+      totalCount: result.totalCount,
+    };
   }
 }
