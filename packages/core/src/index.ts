@@ -22,6 +22,7 @@ export * from "./hooks/active-url";
 export * from "./hooks/theme";
 export * from "./hooks/use-debounce";
 export * from "./hooks/use-query-filters";
+export * from "./hooks/use-table-query";
 export * from "./types";
 export * from "./auth";
 export * from "./components/ui/chart";

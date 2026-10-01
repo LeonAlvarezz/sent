@@ -98,7 +98,13 @@ export type ImportEmailsPayload = v.InferOutput<
 
 export const ListEmailsQuerySchema = v.object({
   ...PaginationPropsSchema.entries,
-  listId: v.optional(v.number()),
+  listId: v.optional(
+    v.pipe(
+      v.union([v.number(), v.string()]),
+      v.transform((val) => (val != null && val !== "" && val !== "all" ? Number(val) : undefined)),
+      v.optional(v.number()),
+    ),
+  ),
   search: v.optional(v.string()),
   title: v.optional(v.string()),
   limit: v.optional(v.number()),

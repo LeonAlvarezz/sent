@@ -12,9 +12,8 @@ import {
   Select,
   toast,
   UploadCloudIcon,
-  useDebounce,
+  useTableQuery,
 } from "@z3/admin-core";
-import type { PaginationState } from "@z3/admin-core";
 import type {
   Email,
   EmailList,
@@ -38,16 +37,16 @@ import { ImportEmailModal } from "./components/import-email-modal";
 
 export function EmailPage() {
   const navigate = useNavigate();
-  const [selectedListId, setSelectedListId] = useState<number | undefined>(
-    undefined,
-  );
-  const [selectedJobTitle, setSelectedJobTitle] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearch = useDebounce(searchTerm.trim(), 300);
 
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
+  const table = useTableQuery<{
+    listId?: number;
+    title?: string;
+  }>({
+    mode: "server",
+    defaultValues: {
+      listId: undefined,
+      title: "all",
+    },
   });
 
   const [selectedEmailIds, setSelectedEmailIds] = useState<Set<number>>(
@@ -80,11 +79,11 @@ export function EmailPage() {
   );
 
   const { data: emailData, isLoading } = useEmailsQuery({
-    listId: selectedListId,
-    title: selectedJobTitle !== "all" ? selectedJobTitle : undefined,
-    search: debouncedSearch || undefined,
-    page: pagination.pageIndex + 1,
-    page_size: pagination.pageSize,
+    listId: table.filters.listId,
+    title: table.filters.title !== "all" ? table.filters.title : undefined,
+    search: table.queryParams.search,
+    page: table.page,
+    page_size: table.pageSize,
   });
 
   const emails = emailData?.emails ?? [];
@@ -139,7 +138,7 @@ export function EmailPage() {
     try {
       const newList = await createListMutation.mutateAsync(data);
       toast.success(`Audience list "${newList.name}" created`);
-      setSelectedListId(newList.id);
+      table.setFilter("listId", newList.id);
       setIsNewListOpen(false);
       return newList;
     } catch (err: any) {
@@ -154,7 +153,7 @@ export function EmailPage() {
       const imported = await importMutation.mutateAsync(data);
       toast.success(`Imported ${imported.length} emails successfully!`);
       if (data.listId) {
-        setSelectedListId(data.listId);
+        table.setFilter("listId", data.listId);
       }
       setIsImportOpen(false);
     } catch (err: any) {
@@ -208,9 +207,7 @@ export function EmailPage() {
     onQuickOutreach: handleQuickOutreach,
   });
 
-  const isFiltered = Boolean(
-    searchTerm || selectedListId !== undefined || selectedJobTitle !== "all",
-  );
+  const selectedJobTitle = table.filters.title ?? "all";
 
   return (
     <div className="space-y-6">
@@ -296,23 +293,15 @@ export function EmailPage() {
         columns={columns}
         data={emails}
         loading={isLoading}
-        rowCount={totalEmailsCount}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={setPagination}
         pageSizeOptions={[10, 20, 30, 50]}
-        toolbar={(table) => (
+        {...table.paginationProps(emailData?.meta)}
+        toolbar={(tableInstance) => (
           <DataTable.Toolbar>
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <Input
                 placeholder="Search emails by address, name, or company..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPagination((prev) =>
-                    prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
-                  );
-                }}
+                value={table.searchValue}
+                onChange={table.setSearchValue}
                 startIcon={<SearchIcon />}
                 containerClassName="h-8"
                 className="w-56 sm:w-72"
@@ -320,11 +309,8 @@ export function EmailPage() {
               <Select
                 value={selectedJobTitle}
                 onChange={(val) => {
-                  setSelectedJobTitle(val || "all");
+                  table.setFilter("title", val || "all");
                   setSelectedEmailIds(new Set());
-                  setPagination((prev) =>
-                    prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
-                  );
                 }}
                 options={jobTitleOptions}
                 searchable
@@ -336,12 +322,14 @@ export function EmailPage() {
                 dropdownClassName="min-w-64"
               />
               <NativeSelect
-                value={selectedListId ? String(selectedListId) : "all"}
+                value={
+                  table.filters.listId ? String(table.filters.listId) : "all"
+                }
                 onChange={(e) => {
                   const val = e.target.value;
-                  setSelectedListId(val === "all" ? undefined : Number(val));
-                  setPagination((prev) =>
-                    prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+                  table.setFilter(
+                    "listId",
+                    val === "all" ? undefined : Number(val),
                   );
                 }}
                 className="h-8 text-xs w-44"
@@ -356,18 +344,13 @@ export function EmailPage() {
                   </option>
                 ))}
               </NativeSelect>
-              {isFiltered && (
+              {table.isFiltered && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    setSearchTerm("");
-                    setSelectedListId(undefined);
-                    setSelectedJobTitle("all");
+                    table.resetFilters();
                     setSelectedEmailIds(new Set());
-                    setPagination((prev) =>
-                      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
-                    );
                   }}
                   className="h-8 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >
@@ -377,7 +360,7 @@ export function EmailPage() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <DataTable.ViewOptions table={table} />
+              <DataTable.ViewOptions table={tableInstance} />
             </div>
           </DataTable.Toolbar>
         )}
@@ -389,7 +372,7 @@ export function EmailPage() {
         setIsOpen={setIsEmailModalOpen}
         contact={selectedEmail}
         emailLists={emailLists}
-        defaultListId={selectedListId}
+        defaultListId={table.filters.listId}
         onSave={handleSaveEmail}
       />
 
@@ -407,7 +390,7 @@ export function EmailPage() {
         isOpen={isImportOpen}
         setIsOpen={setIsImportOpen}
         emailLists={emailLists}
-        defaultListId={selectedListId}
+        defaultListId={table.filters.listId}
         onImport={handleImportEmails}
         onCreateList={handleCreateList}
       />

@@ -4,9 +4,11 @@ import { EmailPage } from "../../modules/outreach/email.page";
 import { queryClient } from "../../libs/query-client";
 import { apiClient } from "../../libs/api-client";
 import { OUTREACH_KEYS } from "../../modules/outreach/outreach.api";
+import { ListEmailsQuerySchema, safeValidateSearch } from "@z3/types";
 import type { EmailsListResponse, EmailList, JobTitleItem } from "@z3/types";
 
 export const Route = createFileRoute("/_authenticated/emails")({
+  validateSearch: safeValidateSearch(ListEmailsQuerySchema),
   loader: () => {
     void queryClient
       .query({

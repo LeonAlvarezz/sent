@@ -117,8 +117,13 @@ export interface DataTableProps<
   rowCount?: number;
   /** Total number of pages for server-side / manual pagination. Auto-calculated if rowCount is provided. */
   pageCount?: number;
-  /** Whether to enable manual / server-side pagination. Automatically true when rowCount or pageCount is provided. */
-  manualPagination?: boolean;
+  /**
+   * Data & pagination handling mode:
+   * - "server": Table expects page chunks from API; uses rowCount / pageCount for paging.
+   * - "client": Table paginates and filters entire dataset locally in memory.
+   * @default "client" (auto-promoted to "server" if rowCount or pageCount is provided)
+   */
+  mode?: "client" | "server";
   pagination?: PaginationState;
   onPaginationChange?:
     | React.Dispatch<React.SetStateAction<PaginationState>>
@@ -150,7 +155,7 @@ function DataTableRoot<
   autoResetPageIndex = false,
   rowCount,
   pageCount,
-  manualPagination,
+  mode,
   pagination: paginationProp,
   onPaginationChange: onPaginationChangeProp,
   toolbarActions,
@@ -197,15 +202,17 @@ function DataTableRoot<
     [freezeActionColumn],
   );
 
-  const isManual =
-    manualPagination ?? (rowCount !== undefined || pageCount !== undefined);
+  const isServer =
+    mode !== undefined
+      ? mode === "server"
+      : rowCount !== undefined || pageCount !== undefined;
 
   const table = useTable({
     features: defaultFeatures,
     data,
     columns: columns as any,
     autoResetPageIndex,
-    manualPagination: isManual,
+    manualPagination: isServer,
     rowCount,
     pageCount,
     state: {
@@ -226,7 +233,7 @@ function DataTableRoot<
   // Clamp pageIndex if total pageCount drops below current pageIndex
   React.useEffect(() => {
     if (loading) return;
-    if (isManual && pageCount === undefined && rowCount === undefined) return;
+    if (isServer && pageCount === undefined && rowCount === undefined) return;
 
     const totalPages = table.getPageCount();
     if (totalPages > 0 && activePagination.pageIndex >= totalPages) {
@@ -241,7 +248,7 @@ function DataTableRoot<
     }
   }, [
     loading,
-    isManual,
+    isServer,
     pageCount,
     rowCount,
     activePagination.pageIndex,
