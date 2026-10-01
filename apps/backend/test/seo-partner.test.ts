@@ -50,8 +50,30 @@ describe("CompetitorBacklinksQuerySchema Validation", () => {
     const parsed = v.parse(CompetitorBacklinksQuerySchema, {
       targetUrl: "competitor.com",
     });
-    expect(parsed.limit).toBe(50);
+    expect(parsed.limit).toBe(100);
     expect(parsed.dofollowOnly).toBe(true);
+    expect(parsed.excludeSpam).toBe(true);
+  });
+
+  it("accepts limit greater than 100 up to 1000", () => {
+    const parsed = v.parse(CompetitorBacklinksQuerySchema, {
+      targetUrl: "competitor.com",
+      limit: 500,
+    });
+    expect(parsed.limit).toBe(500);
+
+    const maxParsed = v.parse(CompetitorBacklinksQuerySchema, {
+      targetUrl: "competitor.com",
+      limit: 1000,
+    });
+    expect(maxParsed.limit).toBe(1000);
+
+    expect(() => {
+      v.parse(CompetitorBacklinksQuerySchema, {
+        targetUrl: "competitor.com",
+        limit: 1001,
+      });
+    }).toThrow();
   });
 
   it("throws validation error on empty targetUrl", () => {

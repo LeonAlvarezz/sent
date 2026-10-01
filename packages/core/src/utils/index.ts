@@ -6,3 +6,4 @@ export * from "./date";
 export * from "./file";
 export * from "./navigation";
 export * from "./table";
+export * from "./seo";

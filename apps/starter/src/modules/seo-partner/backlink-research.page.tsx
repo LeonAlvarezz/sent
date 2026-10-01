@@ -7,6 +7,7 @@ import {
   DataTable,
   InfoIcon,
   Input,
+  isSpamBacklink,
   NativeSelect,
   PageLoadingSkeleton,
   SearchIcon,
@@ -36,7 +37,9 @@ export function BacklinkResearchPage() {
   // Search parameters for competitor
   const [competitorUrl, setCompetitorUrl] = useState("");
   const [minDr, setMinDr] = useState<string>("");
+  const [limit, setLimit] = useState<number>(100);
   const [dofollowOnly, setDofollowOnly] = useState(true);
+  const [excludeSpam, setExcludeSpam] = useState(true);
 
   // In-table local filters
   const [tableSearch, setTableSearch] = useState("");
@@ -56,6 +59,13 @@ export function BacklinkResearchPage() {
   const backlinkMutation = useCompetitorBacklinksMutation();
   const importMutation = useImportSeoPartnersMutation();
 
+  const parsedMinDr = useMemo(() => {
+    const trimmed = minDr.trim();
+    if (!trimmed) return undefined;
+    const n = Number(trimmed);
+    return isNaN(n) ? undefined : n;
+  }, [minDr]);
+
   const handleAnalyze = async (e?: React.SubmitEvent) => {
     if (e) e.preventDefault();
     const cleanUrl = competitorUrl.trim();
@@ -65,12 +75,12 @@ export function BacklinkResearchPage() {
     }
 
     try {
-      const parsedMinDr = minDr.trim() !== "" ? Number(minDr) : undefined;
       const res = await backlinkMutation.mutateAsync({
         targetUrl: cleanUrl,
-        limit: 100,
+        limit,
         minDr: parsedMinDr,
         dofollowOnly,
+        excludeSpam,
       });
 
       const fetchedItems = res.items;
@@ -80,10 +90,11 @@ export function BacklinkResearchPage() {
         cleanUrl.replace(/^https?:\/\//i, "").replace(/\/+$/, ""),
       );
 
-      // Auto-select all new leads
+      // Auto-select visible non-spam new leads
       const initialSelection: RowSelectionState = {};
       fetchedItems.forEach((item) => {
-        if (!item.isExistingPartner) {
+        const isSpam = item.isSpam || isSpamBacklink(item);
+        if (!item.isExistingPartner && (!excludeSpam || !isSpam)) {
           initialSelection[item.domain] = true;
         }
       });
@@ -108,13 +119,25 @@ export function BacklinkResearchPage() {
     }
   };
 
-  // Filter items in memory based on tableSearch and partnerStatusFilter
+  // Filter items in memory based on excludeSpam, parsedMinDr, partnerStatusFilter, tableSearch
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      // 1. Partner status filter
       if (partnerStatusFilter === "new" && item.isExistingPartner) return false;
       if (partnerStatusFilter === "existing" && !item.isExistingPartner)
         return false;
 
+      // 2. Spam filter
+      if (excludeSpam && (item.isSpam || isSpamBacklink(item))) {
+        return false;
+      }
+
+      // 3. Real-time Min DR filter (filters loaded items client-side as you type!)
+      if (parsedMinDr !== undefined && item.dr < parsedMinDr) {
+        return false;
+      }
+
+      // 4. In-table text search
       if (tableSearch.trim()) {
         const q = tableSearch.toLowerCase().trim();
         const inDomain = item.domain.toLowerCase().includes(q);
@@ -128,7 +151,7 @@ export function BacklinkResearchPage() {
 
       return true;
     });
-  }, [items, partnerStatusFilter, tableSearch]);
+  }, [items, partnerStatusFilter, excludeSpam, parsedMinDr, tableSearch]);
 
   const selectedDomains = Object.keys(rowSelection);
   const selectedCount = selectedDomains.length;
@@ -240,8 +263,19 @@ export function BacklinkResearchPage() {
     );
   }
 
-  const newLeadsCount = items.filter((i) => !i.isExistingPartner).length;
-  const existingCount = items.filter((i) => i.isExistingPartner).length;
+  const newLeadsCount = items.filter(
+    (i) =>
+      !i.isExistingPartner &&
+      (!excludeSpam || !(i.isSpam || isSpamBacklink(i))),
+  ).length;
+  const existingCount = items.filter(
+    (i) =>
+      i.isExistingPartner &&
+      (!excludeSpam || !(i.isSpam || isSpamBacklink(i))),
+  ).length;
+  const spamCount = items.filter(
+    (i) => i.isSpam || isSpamBacklink(i),
+  ).length;
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
@@ -285,7 +319,7 @@ export function BacklinkResearchPage() {
             />
           </div>
 
-          <div className="w-full sm:w-32 shrink-0">
+          <div className="w-full sm:w-28 shrink-0">
             <Input
               type="number"
               min={0}
@@ -294,6 +328,20 @@ export function BacklinkResearchPage() {
               value={minDr}
               onChange={(e) => setMinDr(e.target.value)}
             />
+          </div>
+
+          <div className="w-full sm:w-36 shrink-0">
+            <NativeSelect
+              value={limit}
+              onChange={(e) => setLimit(Number(e.target.value))}
+              className="h-9 text-xs"
+            >
+              <option value={50}>50 results</option>
+              <option value={100}>100 results (Default)</option>
+              <option value={200}>200 results</option>
+              <option value={500}>500 results</option>
+              <option value={1000}>1,000 results</option>
+            </NativeSelect>
           </div>
 
           <Button
@@ -309,12 +357,20 @@ export function BacklinkResearchPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-muted-foreground">
-          <Switch
-            size="sm"
-            checked={dofollowOnly}
-            onChange={setDofollowOnly}
-            label="Dofollow links only"
-          />
+          <div className="flex items-center gap-4">
+            <Switch
+              size="sm"
+              checked={dofollowOnly}
+              onChange={setDofollowOnly}
+              label="Dofollow links only"
+            />
+            <Switch
+              size="sm"
+              checked={excludeSpam}
+              onChange={setExcludeSpam}
+              label="Exclude spam & directory links"
+            />
+          </div>
 
           {hasQueried && items.length > 0 && (
             <div className="flex items-center gap-2">
@@ -327,6 +383,11 @@ export function BacklinkResearchPage() {
               <Tag color="amber" className="px-2 py-0.5">
                 {existingCount} In Partners
               </Tag>
+              {spamCount > 0 && (
+                <Tag color="zinc" className="px-2 py-0.5">
+                  {spamCount} Spam {excludeSpam ? "Filtered" : "Detected"}
+                </Tag>
+              )}
             </div>
           )}
         </div>
@@ -402,6 +463,8 @@ export function BacklinkResearchPage() {
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
             getRowId={(row) => row.domain}
+            pageSizeOptions={[10, 20, 50, 100]}
+            initialPageSize={20}
             emptyState={
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
                 <InfoIcon className="size-6 text-muted-foreground/60" />

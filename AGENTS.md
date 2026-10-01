@@ -138,6 +138,7 @@ To prevent recurring design inconsistencies across views:
 | `filterNavByRole(groups, role?)`   | Filters navigation groups and nested items by role    | `filterNavByRole(navGroups, user?.role)`                      | `packages/core/src/utils/navigation.ts` |
 | `hasRequiredRole(role, allowed?)`  | Checks if user role satisfies allowed roles           | `hasRequiredRole(user?.role, ["super_admin"])`                | `packages/core/src/utils/navigation.ts` |
 | `getAutoColumnSize(data, acc, opt)`| Calculates column size based on longest value in data | `getAutoColumnSize(partners, (p) => p.backlinkFor)`           | `packages/core/src/utils/table.ts`      |
+| `isSpamBacklink(item)`             | Detects automated spam, directory, and PBN footprints | `if (!isSpamBacklink(item)) keepItem(item)`                   | `packages/core/src/utils/seo.ts`        |
 
 ### Shared Hooks (`@z3/admin-core`)
 

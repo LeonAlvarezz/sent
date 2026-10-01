@@ -163,12 +163,22 @@ export const createBacklinkColumn = ({
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const isExisting = row.original.isExistingPartner;
-      return isExisting ? (
-        <Tag color="amber" className="gap-1 px-2 py-0.5">
-          <span>Already Partner</span>
-        </Tag>
-      ) : (
+      const item = row.original;
+      if (item.isExistingPartner) {
+        return (
+          <Tag color="amber" className="gap-1 px-2 py-0.5">
+            <span>Already Partner</span>
+          </Tag>
+        );
+      }
+      if (item.isSpam) {
+        return (
+          <Tag color="rose" className="gap-1 px-2 py-0.5">
+            <span>Spam Link</span>
+          </Tag>
+        );
+      }
+      return (
         <Tag color="blue" className="gap-1 px-2 py-0.5">
           <span>New Lead</span>
         </Tag>

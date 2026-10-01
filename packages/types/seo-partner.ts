@@ -96,9 +96,10 @@ export type SeoPartnersListResponse = v.InferOutput<typeof SeoPartnersListRespon
 
 export const CompetitorBacklinksQuerySchema = v.object({
   targetUrl: v.pipe(v.string(), v.minLength(1, "Target URL or domain is required")),
-  limit: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(100)), 50),
+  limit: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(1000)), 100),
   minDr: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(100))),
   dofollowOnly: v.optional(v.boolean(), true),
+  excludeSpam: v.optional(v.boolean(), true),
 });
 
 export type CompetitorBacklinksQuery = v.InferInput<typeof CompetitorBacklinksQuerySchema>;
@@ -114,6 +115,8 @@ export const CompetitorBacklinkItemSchema = v.object({
   dr: v.number(),
   dofollow: v.boolean(),
   isExistingPartner: v.boolean(),
+  spamScore: v.optional(v.number()),
+  isSpam: v.optional(v.boolean()),
 });
 
 export type CompetitorBacklinkItem = v.InferOutput<typeof CompetitorBacklinkItemSchema>;
