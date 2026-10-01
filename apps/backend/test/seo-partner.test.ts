@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import * as v from "valibot";
 import { DataForSeoService } from "../src/modules/seo-partner/dataforseo.service";
-import { CompetitorBacklinksQuerySchema } from "@z3/types";
+import {
+  CompetitorBacklinksQuerySchema,
+  ListSeoPartnersQuerySchema,
+  SeoPartnersListResponseSchema,
+  SEO_PARTNER_STATUS,
+} from "@z3/types";
 import { SeoPartnerService } from "../src/modules/seo-partner/seo-partner.service";
 
 describe("DataForSeoService", () => {
@@ -108,3 +113,61 @@ describe("SeoPartnerService Competitor Backlinks with Existing Partner Detection
     expect(other?.isExistingPartner).toBe(false);
   });
 });
+
+describe("ListSeoPartnersQuerySchema & SeoPartnersListResponseSchema Validation", () => {
+  it("validates pagination query parameters with defaults", () => {
+    const parsed = v.parse(ListSeoPartnersQuerySchema, {});
+    expect(parsed.page).toBe(1);
+    expect(parsed.page_size).toBe(10);
+  });
+
+  it("parses custom pagination, search, and status filters", () => {
+    const parsed = v.parse(ListSeoPartnersQuerySchema, {
+      page: "3",
+      page_size: "25",
+      search: "travel",
+      status: SEO_PARTNER_STATUS.IN_PROGRESS,
+    });
+    expect(parsed.page).toBe(3);
+    expect(parsed.page_size).toBe(25);
+    expect(parsed.search).toBe("travel");
+    expect(parsed.status).toBe(SEO_PARTNER_STATUS.IN_PROGRESS);
+  });
+
+  it("validates paginated seo partners list response envelope", () => {
+    const mockPartner = {
+      id: 1,
+      userId: "u-1",
+      website: "example.com",
+      url: "https://example.com",
+      contactEmail: "admin@example.com",
+      dr: 50,
+      backlinks: 100,
+      backlinkFor: "Client A",
+      outreachStatus: SEO_PARTNER_STATUS.ACCEPTED,
+      outreachDate: new Date(),
+      followUpDate: null,
+      quotedPrice: "$100",
+      notes: "Test note",
+      attributes: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const validEnvelope = {
+      partners: [mockPartner],
+      meta: {
+        total_count: 50,
+        page: 1,
+        page_size: 10,
+        page_count: 5,
+      },
+    };
+
+    const result = v.parse(SeoPartnersListResponseSchema, validEnvelope);
+    expect(result.partners.length).toBe(1);
+    expect(result.meta.total_count).toBe(50);
+    expect(result.meta.page_count).toBe(5);
+  });
+});
+

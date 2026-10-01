@@ -137,6 +137,7 @@ To prevent recurring design inconsistencies across views:
 | `normalizeAccept(accept)`          | Normalizes file presets, extensions, and array inputs | `normalizeAccept(["image", ".pdf"])`                         | `packages/core/src/utils/file.ts`       |
 | `filterNavByRole(groups, role?)`   | Filters navigation groups and nested items by role    | `filterNavByRole(navGroups, user?.role)`                      | `packages/core/src/utils/navigation.ts` |
 | `hasRequiredRole(role, allowed?)`  | Checks if user role satisfies allowed roles           | `hasRequiredRole(user?.role, ["super_admin"])`                | `packages/core/src/utils/navigation.ts` |
+| `getAutoColumnSize(data, acc, opt)`| Calculates column size based on longest value in data | `getAutoColumnSize(partners, (p) => p.backlinkFor)`           | `packages/core/src/utils/table.ts`      |
 
 ### Shared Hooks (`@z3/admin-core`)
 

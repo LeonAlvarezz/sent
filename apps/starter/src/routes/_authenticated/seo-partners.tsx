@@ -5,10 +5,15 @@ import { queryClient } from "../../libs/query-client";
 import { apiClient } from "../../libs/api-client";
 import { SEO_PARTNER_KEYS } from "../../modules/seo-partner/seo-partner.api";
 import { hasRequiredRole } from "@z3/admin-core";
-import { USER_ROLE } from "@z3/types";
-import type { SeoPartner } from "@z3/types";
+import {
+  USER_ROLE,
+  ListSeoPartnersQuerySchema,
+  safeValidateSearch,
+} from "@z3/types";
+import type { SeoPartnersListResponse } from "@z3/types";
 
 export const Route = createFileRoute("/_authenticated/seo-partners")({
+  validateSearch: safeValidateSearch(ListSeoPartnersQuerySchema),
   beforeLoad: ({ context }) => {
     if (
       !context.auth.isLoading &&
@@ -24,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/seo-partners")({
     void queryClient
       .query({
         queryKey: SEO_PARTNER_KEYS.lists(),
-        queryFn: () => apiClient.get<SeoPartner[]>("/seo-partners"),
+        queryFn: () => apiClient.get<SeoPartnersListResponse>("/seo-partners"),
       })
       .catch(noop);
     void queryClient

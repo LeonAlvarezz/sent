@@ -8,6 +8,7 @@ import {
   EditIcon,
   formatDate,
   formatNumber,
+  getAutoColumnSize,
   Select,
   Tag,
   TimeIcon,
@@ -21,6 +22,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { SeoPartnerStatusColor } from "@/modules/shared/status-color";
 
 export interface CreateSeoPartnerColumnProps {
+  data?: SeoPartner[];
   onDelete: (partner: SeoPartner) => void;
   onEdit: (partner: SeoPartner) => void;
   onQuickOutreach?: (partner: SeoPartner) => void;
@@ -131,6 +133,7 @@ function SeoPartnerStatusCell({
 }
 
 export const createSeoPartnerColumns = ({
+  data,
   onDelete,
   onEdit,
   onQuickOutreach,
@@ -227,14 +230,18 @@ export const createSeoPartnerColumns = ({
         if (!client) {
           return <span className="text-muted-foreground text-xs">—</span>;
         }
-
         return (
-          <Tag color="indigo" className="max-w-35 truncate">
-            {client}
-          </Tag>
+          <Tooltip content={client}>
+            <Tag
+              color="indigo"
+              className="max-w-full inline-flex items-center min-w-0"
+            >
+              <span className="truncate">{client}</span>
+            </Tag>
+          </Tooltip>
         );
       },
-      size: 150,
+      size: getAutoColumnSize(data, (p) => p.backlinkFor),
     },
     {
       accessorKey: "outreachStatus",

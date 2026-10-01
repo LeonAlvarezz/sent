@@ -11,6 +11,7 @@ import {
 } from "@z3/types";
 import { DataForSeoService } from "./dataforseo.service";
 import { BadRequestException } from "@/lib";
+import { getMeta } from "@/utils/pagination";
 
 export class SeoPartnerController {
   constructor(private readonly service: SeoPartnerService) {}
@@ -23,6 +24,10 @@ export class SeoPartnerController {
       backlinkFor: c.req.query("backlinkFor") || undefined,
       minDr: c.req.query("minDr") ? Number(c.req.query("minDr")) : undefined,
       maxDr: c.req.query("maxDr") ? Number(c.req.query("maxDr")) : undefined,
+      page: c.req.query("page") ? Number(c.req.query("page")) : undefined,
+      page_size: c.req.query("page_size")
+        ? Number(c.req.query("page_size"))
+        : undefined,
       limit: c.req.query("limit") ? Number(c.req.query("limit")) : undefined,
       offset: c.req.query("offset") ? Number(c.req.query("offset")) : undefined,
       sortBy: c.req.query("sortBy") || undefined,
@@ -30,15 +35,18 @@ export class SeoPartnerController {
     };
 
     const parsedQuery = v.parse(ListSeoPartnersQuerySchema, rawQuery);
-    const { partners, total } = await this.service.getPartners(
-      user.id,
-      parsedQuery,
-    );
+    const page = parsedQuery.page ?? 1;
+    const page_size = parsedQuery.page_size ?? 10;
+
+    const { partners, total } = await this.service.getPartners(user.id, {
+      ...parsedQuery,
+      page,
+      page_size,
+    });
 
     return c.json({
-      success: true,
-      data: partners,
-      total,
+      partners,
+      meta: getMeta({ page, page_size }, total),
     });
   };
 

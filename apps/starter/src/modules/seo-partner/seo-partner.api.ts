@@ -1,10 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/libs/api-client";
 import type {
   CreateSeoPartner,
   ImportSeoPartnersPayload,
   ListSeoPartnersQuery,
   SeoPartner,
+  SeoPartnersListResponse,
   UpdateSeoPartner,
   CompetitorBacklinksQuery,
   CompetitorBacklinkItem,
@@ -12,7 +18,7 @@ import type {
 
 export const SEO_PARTNER_KEYS = {
   all: ["seo-partners"] as const,
-  lists: (params?: ListSeoPartnersQuery) =>
+  lists: (params?: Partial<ListSeoPartnersQuery>) =>
     params !== undefined
       ? ([...SEO_PARTNER_KEYS.all, "list", params] as const)
       : ([...SEO_PARTNER_KEYS.all, "list"] as const),
@@ -21,16 +27,29 @@ export const SEO_PARTNER_KEYS = {
 };
 
 export function useSeoPartnersQuery(
-  params?: ListSeoPartnersQuery,
+  params?: Partial<ListSeoPartnersQuery>,
   options?: { enabled?: boolean },
 ) {
   return useQuery({
     queryKey: SEO_PARTNER_KEYS.lists(params),
     queryFn: () =>
-      apiClient.get<SeoPartner[]>("/seo-partners", {
-        params: params as Record<string, any>,
+      apiClient.get<SeoPartnersListResponse>("/seo-partners", {
+        params: {
+          ...(params?.search ? { search: params.search } : {}),
+          ...(params?.status ? { status: params.status } : {}),
+          ...(params?.backlinkFor ? { backlinkFor: params.backlinkFor } : {}),
+          ...(params?.page !== undefined ? { page: params.page } : {}),
+          ...(params?.page_size !== undefined
+            ? { page_size: params.page_size }
+            : {}),
+          ...(params?.minDr !== undefined ? { minDr: params.minDr } : {}),
+          ...(params?.maxDr !== undefined ? { maxDr: params.maxDr } : {}),
+          ...(params?.sortBy ? { sortBy: params.sortBy } : {}),
+          ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
+        },
       }),
     enabled: options?.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 }
 

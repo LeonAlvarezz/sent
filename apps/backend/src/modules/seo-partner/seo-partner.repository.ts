@@ -13,6 +13,8 @@ export interface ListSeoPartnersOptions {
   backlinkFor?: string;
   minDr?: number;
   maxDr?: number;
+  page?: number;
+  page_size?: number;
   limit?: number;
   offset?: number;
   sortBy?: "website" | "dr" | "backlinks" | "outreachDate" | "createdAt";
@@ -68,18 +70,25 @@ export class SeoPartnerRepository {
 
     const orderFn = options?.sortOrder === "asc" ? asc : desc;
 
+    const limit = options?.limit ?? options?.page_size;
+    const offset =
+      options?.offset ??
+      (options?.page && options?.page_size
+        ? (options.page - 1) * options.page_size
+        : undefined);
+
     let query = this.db
       .select()
       .from(seoPartner)
       .where(where)
       .orderBy(orderFn(sortCol));
 
-    if (options?.limit !== undefined) {
-      query = query.limit(options.limit) as typeof query;
+    if (limit !== undefined) {
+      query = query.limit(limit) as typeof query;
     }
 
-    if (options?.offset !== undefined) {
-      query = query.offset(options.offset) as typeof query;
+    if (offset !== undefined) {
+      query = query.offset(offset) as typeof query;
     }
 
     return query;

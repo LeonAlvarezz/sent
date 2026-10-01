@@ -15,6 +15,7 @@ import {
   Unauthorized,
   UploadCloudIcon,
   useAuth,
+  useTableQuery,
 } from "@z3/admin-core";
 import { SEO_PARTNER_STATUS, USER_ROLE } from "@z3/types";
 import type { CreateSeoPartner, SeoPartner, UpdateSeoPartner } from "@z3/types";
@@ -41,12 +42,17 @@ export function SeoPartnerPage() {
     currentUser?.role === USER_ROLE.SUPER_ADMIN ||
     currentUser?.role === USER_ROLE.ADMIN;
 
-  // Search & Filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<
-    SEO_PARTNER_STATUS | "all"
-  >("all");
-  const [selectedTarget, setSelectedTarget] = useState<string>("all");
+  const table = useTableQuery<{
+    status?: SEO_PARTNER_STATUS | "all";
+    backlinkFor?: string;
+  }>({
+    mode: "server",
+    defaultPageSize: 10,
+    defaultValues: {
+      status: "all",
+      backlinkFor: "all",
+    },
+  });
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,14 +73,22 @@ export function SeoPartnerPage() {
   const { data: targets = [] } = useSeoPartnerTargetsQuery({
     enabled: isAuthorized,
   });
-  const { data: partners = [], isLoading } = useSeoPartnersQuery(
+  const { data: partnersData, isLoading } = useSeoPartnersQuery(
     {
-      search: searchTerm.trim() || undefined,
-      status: selectedStatus !== "all" ? selectedStatus : undefined,
-      backlinkFor: selectedTarget !== "all" ? selectedTarget : undefined,
+      search: table.queryParams.search,
+      status: table.filters.status !== "all" ? table.filters.status : undefined,
+      backlinkFor:
+        table.filters.backlinkFor !== "all"
+          ? table.filters.backlinkFor
+          : undefined,
+      page: table.page,
+      page_size: table.pageSize,
     },
     { enabled: isAuthorized },
   );
+
+  const partners =
+    partnersData?.partners ?? (Array.isArray(partnersData) ? partnersData : []);
 
   // Mutations
   const createMutation = useCreateSeoPartnerMutation();
@@ -132,17 +146,6 @@ export function SeoPartnerPage() {
     setIsOutreachOpen(true);
   };
 
-  const isFiltered =
-    Boolean(searchTerm.trim()) ||
-    selectedStatus !== "all" ||
-    selectedTarget !== "all";
-
-  const handleResetFilters = () => {
-    setSearchTerm("");
-    setSelectedStatus("all");
-    setSelectedTarget("all");
-  };
-
   // Status update tracking
   const [updatingIds, setUpdatingIds] = useState<Record<number, boolean>>({});
 
@@ -174,6 +177,7 @@ export function SeoPartnerPage() {
   const columns = useMemo(
     () =>
       createSeoPartnerColumns({
+        data: partners,
         onDelete: (partner) => {
           setPartnerToDelete(partner);
           setIsDeleteOpen(true);
@@ -186,7 +190,7 @@ export function SeoPartnerPage() {
         onStatusChange: handleStatusChange,
         updatingIds,
       }),
-    [updatingIds],
+    [partners, updatingIds],
   );
 
   if (isAuthLoading || !currentUser) {
@@ -226,16 +230,6 @@ export function SeoPartnerPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate({ to: "/backlink-research" })}
-            className="gap-1.5"
-          >
-            <SearchIcon className="size-4 text-primary" />
-            <span>Backlink Research</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => setIsImportOpen(true)}
             className="gap-1.5"
           >
@@ -263,13 +257,15 @@ export function SeoPartnerPage() {
         columns={columns}
         data={partners}
         loading={isLoading}
-        toolbar={(table) => (
+        pageSizeOptions={[10, 20, 30, 50]}
+        {...table.paginationProps(partnersData?.meta)}
+        toolbar={(tableInstance) => (
           <DataTable.Toolbar>
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <Input
                 placeholder="Search website, URL, notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={table.searchValue}
+                onChange={table.setSearchValue}
                 startIcon={
                   <SearchIcon className="size-4 text-muted-foreground" />
                 }
@@ -278,9 +274,10 @@ export function SeoPartnerPage() {
               />
 
               <NativeSelect
-                value={selectedStatus}
+                value={table.filters.status ?? "all"}
                 onChange={(e) =>
-                  setSelectedStatus(
+                  table.setFilter(
+                    "status",
                     e.target.value as SEO_PARTNER_STATUS | "all",
                   )
                 }
@@ -298,8 +295,10 @@ export function SeoPartnerPage() {
 
               {targets.length > 0 && (
                 <NativeSelect
-                  value={selectedTarget}
-                  onChange={(e) => setSelectedTarget(e.target.value)}
+                  value={table.filters.backlinkFor ?? "all"}
+                  onChange={(e) =>
+                    table.setFilter("backlinkFor", e.target.value)
+                  }
                   className="h-8 text-xs w-36"
                 >
                   <option value="all">All Clients</option>
@@ -311,11 +310,11 @@ export function SeoPartnerPage() {
                 </NativeSelect>
               )}
 
-              {isFiltered && (
+              {table.isFiltered && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleResetFilters}
+                  onClick={table.resetFilters}
                   className="h-8 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >
                   <CloseIcon className="size-3.5" />
@@ -325,7 +324,7 @@ export function SeoPartnerPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <DataTable.ViewOptions table={table} />
+              <DataTable.ViewOptions table={tableInstance} />
             </div>
           </DataTable.Toolbar>
         )}

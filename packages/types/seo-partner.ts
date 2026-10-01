@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { PaginationPropsSchema, PaginationMetaSchema } from "./common";
 
 export enum SEO_PARTNER_STATUS {
   NOT_STARTED = "not_started",
@@ -72,6 +73,7 @@ export const ImportSeoPartnersPayloadSchema = v.object({
 export type ImportSeoPartnersPayload = v.InferInput<typeof ImportSeoPartnersPayloadSchema>;
 
 export const ListSeoPartnersQuerySchema = v.object({
+  ...PaginationPropsSchema.entries,
   search: v.optional(v.string()),
   status: v.optional(v.enum(SEO_PARTNER_STATUS)),
   backlinkFor: v.optional(v.string()),
@@ -83,7 +85,14 @@ export const ListSeoPartnersQuerySchema = v.object({
   sortOrder: v.optional(v.union([v.literal("asc"), v.literal("desc")])),
 });
 
-export type ListSeoPartnersQuery = v.InferInput<typeof ListSeoPartnersQuerySchema>;
+export type ListSeoPartnersQuery = v.InferOutput<typeof ListSeoPartnersQuerySchema>;
+
+export const SeoPartnersListResponseSchema = v.object({
+  partners: v.array(SeoPartnerSchema),
+  meta: PaginationMetaSchema,
+});
+
+export type SeoPartnersListResponse = v.InferOutput<typeof SeoPartnersListResponseSchema>;
 
 export const CompetitorBacklinksQuerySchema = v.object({
   targetUrl: v.pipe(v.string(), v.minLength(1, "Target URL or domain is required")),

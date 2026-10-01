@@ -42,8 +42,10 @@ export function DashboardPage() {
   const emails = emailsData?.emails ?? [];
   const { data: emailLists = [], isLoading: isLoadingLists } =
     useEmailListsQuery();
-  const { data: partners = [], isLoading: isLoadingPartners } =
+  const { data: partnersData, isLoading: isLoadingPartners } =
     useSeoPartnersQuery();
+  const partners =
+    partnersData?.partners ?? (Array.isArray(partnersData) ? partnersData : []);
   const { data: logs = [], isLoading: isLoadingLogs } = useOutreachLogsQuery();
   const { data: campaigns = [], isLoading: isLoadingCampaigns } =
     useCampaignsQuery();
