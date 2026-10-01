@@ -4,7 +4,7 @@ import { EmailPage } from "../../modules/outreach/email.page";
 import { queryClient } from "../../libs/query-client";
 import { apiClient } from "../../libs/api-client";
 import { OUTREACH_KEYS } from "../../modules/outreach/outreach.api";
-import type { Email, EmailList, JobTitleItem } from "@z3/types";
+import type { EmailsListResponse, EmailList, JobTitleItem } from "@z3/types";
 
 export const Route = createFileRoute("/_authenticated/emails")({
   loader: () => {
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/emails")({
     void queryClient
       .query({
         queryKey: OUTREACH_KEYS.emails(),
-        queryFn: () => apiClient.get<Email[]>("/outreach/emails"),
+        queryFn: () => apiClient.get<EmailsListResponse>("/outreach/emails"),
       })
       .catch(noop);
     void queryClient

@@ -63,6 +63,50 @@ export type CursorProps = v.InferOutput<typeof CursorPropsSchema>;
 export type CursorPaginationQuery<TFilter = unknown> =
   BaseCursorPaginationQuery & TFilter;
 
+export const PaginationPropsSchema = v.object({
+  page: v.optional(
+    v.pipe(
+      v.union([v.number(), v.string()]),
+      v.transform((val) => (val != null ? Math.max(1, Number(val) || 1) : 1)),
+      v.number(),
+    ),
+    1,
+  ),
+  page_size: v.optional(
+    v.pipe(
+      v.union([v.number(), v.string()]),
+      v.transform((val) => (val != null ? Math.max(1, Number(val) || 10) : 10)),
+      v.number(),
+    ),
+    10,
+  ),
+});
+
+export type PaginationProps = v.InferOutput<typeof PaginationPropsSchema>;
+
+export const PaginationMetaSchema = v.object({
+  total_count: v.number(),
+  page: v.number(),
+  page_size: v.number(),
+  page_count: v.number(),
+});
+
+export type PaginationMeta = v.InferOutput<typeof PaginationMetaSchema>;
+
+export function createPaginatedResponseSchema<
+  TItem extends v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>,
+>(itemSchema: TItem) {
+  return v.object({
+    data: v.array(itemSchema),
+    meta: PaginationMetaSchema,
+  });
+}
+
+export type PaginatedResponse<T> = {
+  data: T[];
+  meta: PaginationMeta;
+};
+
 /**
  * Wraps a Valibot object schema in a safe search validator that never crashes.
  * If invalid search query parameters are provided (e.g. typos like order=dessc),

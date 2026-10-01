@@ -38,7 +38,8 @@ function ChartSkeleton() {
 }
 
 export function DashboardPage() {
-  const { data: emails = [], isLoading: isLoadingEmails } = useEmailsQuery();
+  const { data: emailsData, isLoading: isLoadingEmails } = useEmailsQuery();
+  const emails = emailsData?.emails ?? [];
   const { data: emailLists = [], isLoading: isLoadingLists } =
     useEmailListsQuery();
   const { data: partners = [], isLoading: isLoadingPartners } =

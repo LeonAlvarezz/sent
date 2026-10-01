@@ -168,10 +168,11 @@ export function AudienceSelectModal({
     })),
   ];
 
-  const { data: emails = [], isLoading } = useEmailsQuery({
+  const { data: emailsData, isLoading } = useEmailsQuery({
     title: selectedJobTitle !== "all" ? selectedJobTitle : undefined,
     search: searchTerm.trim() || undefined,
   });
+  const emails = emailsData?.emails ?? [];
 
   // Active recipients only
   const activeEmails = emails.filter((e) => e.status === "active");

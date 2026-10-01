@@ -27,7 +27,8 @@ export function BulkSendPage() {
   const searchParams = useSearch({ strict: false });
 
   // Queries
-  const { data: allEmails = [] } = useEmailsQuery();
+  const { data: emailData } = useEmailsQuery();
+  const allEmails = emailData?.emails ?? [];
   const { data: senders = [] } = useSendersQuery();
   const { data: pitchProfiles = [] } = usePitchProfilesQuery();
   const { data: settings } = useOutreachSettingsQuery();

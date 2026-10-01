@@ -15,6 +15,7 @@ import {
   type CreatePitchProfile,
   type CreateSenderIdentity,
   type JobTitleItem,
+  type ListEmailsQuery,
   type UpdateEmail,
   type UpdatePitchProfile,
   type UpdateSenderIdentity,
@@ -135,7 +136,11 @@ export class OutreachRepository {
     return created;
   }
 
-  async updatePitchProfile(id: number, data: UpdatePitchProfile, userId: string) {
+  async updatePitchProfile(
+    id: number,
+    data: UpdatePitchProfile,
+    userId: string,
+  ) {
     const [updated] = await this.db
       .update(pitchProfile)
       .set(data)
@@ -189,9 +194,9 @@ export class OutreachRepository {
   }
 
   // --- EMAILS ---
-  async getEmails(
+  private buildEmailsWhereConditions(
     userId: string,
-    options?: { listId?: number; search?: string; limit?: number; title?: string },
+    options?: { listId?: number; search?: string; title?: string },
   ) {
     const conditions = [eq(email.userId, userId)];
     if (options?.listId) {
@@ -212,16 +217,33 @@ export class OutreachRepository {
         )!,
       );
     }
-    const query = this.db
-      .select()
-      .from(email)
-      .where(and(...conditions))
-      .orderBy(desc(email.createdAt));
+    return and(...conditions);
+  }
 
-    if (options?.limit !== undefined) {
-      return query.limit(options.limit);
-    }
+  async getEmails(userId: string, options: ListEmailsQuery) {
+    const where = this.buildEmailsWhereConditions(userId, options);
+    const offset = (options.page - 1) * options.page_size;
+
+    const query = this.db.query.email.findMany({
+      where,
+      limit: options.page_size,
+      offset,
+      orderBy: desc(email.createdAt),
+    });
     return query;
+  }
+
+  async getEmailsCount(
+    userId: string,
+    options?: { listId?: number; search?: string; title?: string },
+  ) {
+    const where = this.buildEmailsWhereConditions(userId, options);
+    const [result] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(email)
+      .where(where);
+
+    return Number(result?.count ?? 0);
   }
 
   async getJobTitles(userId: string): Promise<JobTitleItem[]> {
@@ -254,7 +276,12 @@ export class OutreachRepository {
     const [item] = await this.db
       .select()
       .from(email)
-      .where(and(eq(email.email, emailAddress.toLowerCase().trim()), eq(email.userId, userId)));
+      .where(
+        and(
+          eq(email.email, emailAddress.toLowerCase().trim()),
+          eq(email.userId, userId),
+        ),
+      );
     return item;
   }
 

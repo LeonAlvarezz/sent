@@ -12,7 +12,9 @@ import {
   Select,
   toast,
   UploadCloudIcon,
+  useDebounce,
 } from "@z3/admin-core";
+import type { PaginationState } from "@z3/admin-core";
 import type {
   Email,
   EmailList,
@@ -36,13 +38,18 @@ import { ImportEmailModal } from "./components/import-email-modal";
 
 export function EmailPage() {
   const navigate = useNavigate();
-
-  // Filter state
   const [selectedListId, setSelectedListId] = useState<number | undefined>(
     undefined,
   );
   const [selectedJobTitle, setSelectedJobTitle] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm.trim(), 300);
+
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
   const [selectedEmailIds, setSelectedEmailIds] = useState<Set<number>>(
     new Set(),
   );
@@ -72,23 +79,23 @@ export function EmailPage() {
     [jobTitles],
   );
 
-  const { data: emails = [], isLoading } = useEmailsQuery({
+  const { data: emailData, isLoading } = useEmailsQuery({
     listId: selectedListId,
     title: selectedJobTitle !== "all" ? selectedJobTitle : undefined,
-    search: searchTerm.trim() || undefined,
+    search: debouncedSearch || undefined,
+    page: pagination.pageIndex + 1,
+    page_size: pagination.pageSize,
   });
 
+  const emails = emailData?.emails ?? [];
+  const totalEmailsCount = emailData?.meta.total_count ?? 0;
+  const pageCount = emailData?.meta.page_count;
   // Mutations
   const createEmailMutation = useCreateEmailMutation();
   const updateEmailMutation = useUpdateEmailMutation();
   const deleteEmailMutation = useDeleteEmailMutation();
   const createListMutation = useCreateEmailListMutation();
   const importMutation = useImportEmailsMutation();
-
-  const totalEmailsCount = emailLists.reduce(
-    (acc, l) => acc + l.emailCount,
-    0,
-  );
 
   // Email CRUD Handlers
   const handleSaveEmail = async (data: any) => {
@@ -214,8 +221,8 @@ export function EmailPage() {
             Emails & Audiences
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage recipient directories, organize audience lists, and import CSV
-            lead sheets.
+            Manage recipient directories, organize audience lists, and import
+            CSV lead sheets.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -232,21 +239,25 @@ export function EmailPage() {
               <span>🚀 Bulk Send to Selected ({selectedEmailIds.size})</span>
             </Button>
           )}
-          {selectedEmailIds.size === 0 && selectedJobTitle !== "all" && emails.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                navigate({
-                  to: "/bulk-send",
-                  search: { jobTitle: selectedJobTitle },
-                });
-              }}
-              className="h-8 px-3 text-xs flex items-center gap-1.5"
-            >
-              <span>🎯 Bulk Send to "{selectedJobTitle}" ({emails.length})</span>
-            </Button>
-          )}
+          {selectedEmailIds.size === 0 &&
+            selectedJobTitle !== "all" &&
+            totalEmailsCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigate({
+                    to: "/bulk-send",
+                    search: { jobTitle: selectedJobTitle },
+                  });
+                }}
+                className="h-8 px-3 text-xs flex items-center gap-1.5"
+              >
+                <span>
+                  🎯 Bulk Send to "{selectedJobTitle}" ({totalEmailsCount})
+                </span>
+              </Button>
+            )}
           <Button
             variant="secondary"
             size="sm"
@@ -285,13 +296,23 @@ export function EmailPage() {
         columns={columns}
         data={emails}
         loading={isLoading}
+        rowCount={totalEmailsCount}
+        pageCount={pageCount}
+        pagination={pagination}
+        onPaginationChange={setPagination}
+        pageSizeOptions={[10, 20, 30, 50]}
         toolbar={(table) => (
           <DataTable.Toolbar>
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <Input
                 placeholder="Search emails by address, name, or company..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPagination((prev) =>
+                    prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+                  );
+                }}
                 startIcon={<SearchIcon />}
                 containerClassName="h-8"
                 className="w-56 sm:w-72"
@@ -301,6 +322,9 @@ export function EmailPage() {
                 onChange={(val) => {
                   setSelectedJobTitle(val || "all");
                   setSelectedEmailIds(new Set());
+                  setPagination((prev) =>
+                    prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+                  );
                 }}
                 options={jobTitleOptions}
                 searchable
@@ -316,15 +340,15 @@ export function EmailPage() {
                 onChange={(e) => {
                   const val = e.target.value;
                   setSelectedListId(val === "all" ? undefined : Number(val));
+                  setPagination((prev) =>
+                    prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+                  );
                 }}
                 className="h-8 text-xs w-44"
               >
                 <option value="all">
                   All Lists (
-                  {totalEmailsCount > 0
-                    ? totalEmailsCount
-                    : emails.length}
-                  )
+                  {totalEmailsCount > 0 ? totalEmailsCount : emails.length})
                 </option>
                 {emailLists.map((l: EmailList) => (
                   <option key={l.id} value={l.id}>
@@ -341,6 +365,9 @@ export function EmailPage() {
                     setSelectedListId(undefined);
                     setSelectedJobTitle("all");
                     setSelectedEmailIds(new Set());
+                    setPagination((prev) =>
+                      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+                    );
                   }}
                   className="h-8 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >

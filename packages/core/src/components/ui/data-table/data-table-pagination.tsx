@@ -19,7 +19,7 @@ export function DataTablePagination<TData extends Record<string, any> = any>({
   loading = false,
 }: DataTablePaginationProps<TData>) {
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
-  const totalRowCount = table.getFilteredRowModel().rows.length;
+  const totalRowCount = table.getRowCount();
   const pageIndex = table.state.pagination.pageIndex;
   const pageSize = table.state.pagination.pageSize;
   const pageCount = table.getPageCount();
@@ -62,7 +62,7 @@ export function DataTablePagination<TData extends Record<string, any> = any>({
           />
         </div>
         {/* Page numbers & Navigation controls */}
-        {loading ? (
+        {loading && pageCount <= 0 ? (
           <div className="flex items-center space-x-1.5">
             <Skeleton className="size-8 rounded-lg" />
             <Skeleton className="size-8 rounded-lg" />

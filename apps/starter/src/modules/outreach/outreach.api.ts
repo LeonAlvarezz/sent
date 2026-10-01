@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { apiClient } from "@/libs/api-client";
 import type {
   Campaign,
@@ -12,10 +17,12 @@ import type {
   CreatePitchProfile,
   CreateSenderIdentity,
   DispatchOutreach,
+  EmailsListResponse,
   GenerateDraft,
   GeneratedDraft,
   ImportEmailsPayload,
   JobTitleItem,
+  ListEmailsQuery,
   OutreachLog,
   OutreachSettings,
   PitchProfile,
@@ -31,7 +38,7 @@ export const OUTREACH_KEYS = {
   lists: () => [...OUTREACH_KEYS.all, "lists"] as const,
   jobTitles: () => [...OUTREACH_KEYS.all, "job-titles"] as const,
   aiStatus: () => [...OUTREACH_KEYS.all, "ai-status"] as const,
-  emails: (params?: { listId?: number; search?: string; limit?: number; title?: string }) =>
+  emails: (params?: Partial<ListEmailsQuery>) =>
     params !== undefined
       ? ([...OUTREACH_KEYS.all, "emails", params] as const)
       : ([...OUTREACH_KEYS.all, "emails"] as const),
@@ -39,8 +46,10 @@ export const OUTREACH_KEYS = {
   settings: () => [...OUTREACH_KEYS.all, "settings"] as const,
   campaigns: () => [...OUTREACH_KEYS.all, "campaigns"] as const,
   campaign: (id: number) => [...OUTREACH_KEYS.all, "campaigns", id] as const,
-  campaignItems: (id: number, params?: { status?: string; limit?: number; offset?: number }) =>
-    [...OUTREACH_KEYS.all, "campaigns", id, "items", params] as const,
+  campaignItems: (
+    id: number,
+    params?: { status?: string; limit?: number; offset?: number },
+  ) => [...OUTREACH_KEYS.all, "campaigns", id, "items", params] as const,
 };
 
 // Senders
@@ -65,7 +74,10 @@ export function useCreateSenderMutation() {
 export function useTestSenderMutation() {
   return useMutation({
     mutationFn: (data: CreateSenderIdentity) =>
-      apiClient.post<{ success: boolean; message: string }>("/outreach/senders/test", data),
+      apiClient.post<{ success: boolean; message: string }>(
+        "/outreach/senders/test",
+        data,
+      ),
   });
 }
 
@@ -93,7 +105,9 @@ export function useCreatePitchProfileMutation() {
     mutationFn: (data: CreatePitchProfile) =>
       apiClient.post<PitchProfile>("/outreach/pitch-profiles", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.pitchProfiles() });
+      queryClient.invalidateQueries({
+        queryKey: OUTREACH_KEYS.pitchProfiles(),
+      });
     },
   });
 }
@@ -101,9 +115,12 @@ export function useCreatePitchProfileMutation() {
 export function useDeletePitchProfileMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => apiClient.delete(`/outreach/pitch-profiles/${id}`),
+    mutationFn: (id: number) =>
+      apiClient.delete(`/outreach/pitch-profiles/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.pitchProfiles() });
+      queryClient.invalidateQueries({
+        queryKey: OUTREACH_KEYS.pitchProfiles(),
+      });
     },
   });
 }
@@ -147,23 +164,26 @@ export function useJobTitlesQuery() {
 }
 
 // Emails
-export function useEmailsQuery(params?: {
-  listId?: number;
-  search?: string;
-  limit?: number;
-  title?: string;
-}) {
+export function useEmailsQuery(
+  params?: Partial<ListEmailsQuery>,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: OUTREACH_KEYS.emails(params),
     queryFn: () =>
-      apiClient.get<Email[]>("/outreach/emails", {
+      apiClient.get<EmailsListResponse>("/outreach/emails", {
         params: {
           ...(params?.listId ? { listId: params.listId } : {}),
           ...(params?.search ? { search: params.search } : {}),
-          ...(params?.limit ? { limit: params.limit } : {}),
+          ...(params?.page !== undefined ? { page: params.page } : {}),
+          ...(params?.page_size !== undefined
+            ? { page_size: params.page_size }
+            : {}),
           ...(params?.title ? { title: params.title } : {}),
         },
       }),
+    enabled: options?.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -256,7 +276,10 @@ export function useDispatchEmailMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: DispatchOutreach) =>
-      apiClient.post<{ success: boolean; logId: number; message: string }>("/outreach/dispatch", data),
+      apiClient.post<{ success: boolean; logId: number; message: string }>(
+        "/outreach/dispatch",
+        data,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.logs() });
       queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.emails() });
@@ -301,7 +324,8 @@ export function useSaveOutreachSettingsMutation() {
 export function useCampaignsQuery() {
   return useQuery({
     queryKey: OUTREACH_KEYS.campaigns(),
-    queryFn: () => apiClient.get<CampaignWithRelations[]>("/outreach/campaigns"),
+    queryFn: () =>
+      apiClient.get<CampaignWithRelations[]>("/outreach/campaigns"),
     refetchInterval: (query) => {
       // Auto-poll every 3s if any campaign is actively running
       const hasRunning = query.state.data?.some(
@@ -315,7 +339,8 @@ export function useCampaignsQuery() {
 export function useCampaignQuery(id?: number) {
   return useQuery({
     queryKey: OUTREACH_KEYS.campaign(id || 0),
-    queryFn: () => apiClient.get<CampaignWithRelations>(`/outreach/campaigns/${id}`),
+    queryFn: () =>
+      apiClient.get<CampaignWithRelations>(`/outreach/campaigns/${id}`),
     enabled: typeof id === "number" && id > 0,
     refetchInterval: (query) => {
       const status = query.state.data?.status;
@@ -344,10 +369,11 @@ export function useCreateCampaignMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateCampaign) =>
-      apiClient.post<{ success: boolean; data: CampaignWithRelations; message: string }>(
-        "/outreach/campaigns",
-        data,
-      ),
+      apiClient.post<{
+        success: boolean;
+        data: CampaignWithRelations;
+        message: string;
+      }>("/outreach/campaigns", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.campaigns() });
     },
@@ -437,7 +463,9 @@ export function useTickCampaignMutation() {
           remaining: number;
           status: string;
         };
-      }>(`/outreach/campaigns/${id}/tick${batchSize ? `?batchSize=${batchSize}` : ""}`),
+      }>(
+        `/outreach/campaigns/${id}/tick${batchSize ? `?batchSize=${batchSize}` : ""}`,
+      ),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.campaigns() });
       queryClient.invalidateQueries({ queryKey: OUTREACH_KEYS.campaign(id) });

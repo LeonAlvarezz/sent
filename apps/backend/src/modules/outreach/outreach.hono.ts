@@ -1,25 +1,15 @@
 import { Hono } from "hono";
-import * as v from "valibot";
+import { createDb } from "@/db";
 import { OutreachRepository } from "./outreach.repository";
 import { SenderService } from "./sender.service";
+import { PitchProfileService } from "./pitch-profile.service";
+import { EmailService } from "./email.service";
 import { ScraperService } from "./scraper.service";
 import { GeneratorService } from "./generator.service";
 import { DispatchService } from "./dispatch.service";
+import { OutreachService } from "./outreach.service";
+import { OutreachController } from "./outreach.controller";
 import { campaignRouter } from "@/modules/campaign/campaign.hono";
-import { createDb } from "@/db";
-import {
-  CreateEmailListSchema,
-  CreateEmailSchema,
-  CreatePitchProfileSchema,
-  CreateSenderIdentitySchema,
-  DispatchOutreachSchema,
-  GenerateDraftSchema,
-  ImportEmailsPayloadSchema,
-  ScrapeUrlSchema,
-  UpdateEmailSchema,
-  UpdatePitchProfileSchema,
-  UpdateSenderIdentitySchema,
-} from "@z3/types";
 import { requireAdminOrSuperAdmin } from "@/lib/permissions";
 
 export type OutreachEnv = {
@@ -42,310 +32,107 @@ export const outreachRouter = new Hono<OutreachEnv>();
 // Mount dedicated Campaign router under /campaigns for backwards compatibility
 outreachRouter.route("/campaigns", campaignRouter);
 
-// Lazy helper to get services for current request on demand
-function getServices(dbBinding: D1Database) {
-  let db: ReturnType<typeof createDb> | undefined;
-  const getDb = () => (db ??= createDb(dbBinding));
+function getController(dbBinding: D1Database): OutreachController {
+  const db = createDb(dbBinding);
+  const repo = new OutreachRepository(db);
 
-  let repo: OutreachRepository | undefined;
-  const getRepo = () => (repo ??= new OutreachRepository(getDb()));
+  const senderService = new SenderService(repo);
+  const pitchProfileService = new PitchProfileService(repo);
+  const emailService = new EmailService(repo);
+  const scraperService = new ScraperService();
+  const generatorService = new GeneratorService(repo);
+  const dispatchService = new DispatchService(repo);
+  const outreachService = new OutreachService(repo);
 
-  return {
-    get repo() {
-      return getRepo();
-    },
-    get senderService() {
-      return new SenderService(getRepo());
-    },
-    get scraperService() {
-      return new ScraperService();
-    },
-    get generatorService() {
-      return new GeneratorService(getRepo());
-    },
-    get dispatchService() {
-      return new DispatchService(getRepo());
-    },
-  };
+  return new OutreachController(
+    senderService,
+    pitchProfileService,
+    emailService,
+    scraperService,
+    generatorService,
+    dispatchService,
+    outreachService,
+  );
 }
 
 // --- SENDERS ---
-outreachRouter.get("/senders", async (c) => {
-  const user = c.get("user");
-  const { senderService } = getServices(c.env.DB);
-  const senders = await senderService.getSenders(user.id);
-  return c.json({ success: true, data: senders });
-});
-
-outreachRouter.post("/senders", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(CreateSenderIdentitySchema, body);
-  const { senderService } = getServices(c.env.DB);
-  const sender = await senderService.createSender(payload, user.id);
-  return c.json(
-    { success: true, data: sender, message: "Sender created" },
-    201,
-  );
-});
-
-outreachRouter.post("/senders/test", async (c) => {
-  const body = await c.req.json();
-  const payload = v.parse(CreateSenderIdentitySchema, body);
-  const { senderService } = getServices(c.env.DB);
-  const result = await senderService.testConnection(payload);
-  return c.json({ success: true, message: result.message });
-});
-
-outreachRouter.put("/senders/:id", async (c) => {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const body = await c.req.json();
-  const payload = v.parse(UpdateSenderIdentitySchema, body);
-  const { senderService } = getServices(c.env.DB);
-  const updated = await senderService.updateSender(id, payload, user.id);
-  return c.json({ success: true, data: updated });
-});
-
-outreachRouter.delete("/senders/:id", async (c) => {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const { senderService } = getServices(c.env.DB);
-  const deleted = await senderService.deleteSender(id, user.id);
-  return c.json({ success: true, data: deleted });
-});
+outreachRouter.get("/senders", (c) => getController(c.env.DB).listSenders(c));
+outreachRouter.post("/senders", (c) => getController(c.env.DB).createSender(c));
+outreachRouter.post("/senders/test", (c) =>
+  getController(c.env.DB).testSender(c),
+);
+outreachRouter.put("/senders/:id", (c) =>
+  getController(c.env.DB).updateSender(c),
+);
+outreachRouter.delete("/senders/:id", (c) =>
+  getController(c.env.DB).deleteSender(c),
+);
 
 // --- PITCH PROFILES ---
-outreachRouter.get("/pitch-profiles", async (c) => {
-  const user = c.get("user");
-  const { repo } = getServices(c.env.DB);
-  const profiles = await repo.getPitchProfiles(user.id);
-  return c.json({ success: true, data: profiles });
-});
-
-outreachRouter.get("/pitch-profiles/:id", async (c) => {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const { repo } = getServices(c.env.DB);
-  const profile = await repo.getPitchProfile(id, user.id);
-  return c.json({ success: true, data: profile });
-});
-
-outreachRouter.post("/pitch-profiles", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(CreatePitchProfileSchema, body);
-  const { repo } = getServices(c.env.DB);
-  const profile = await repo.createPitchProfile(payload, user.id);
-  return c.json(
-    { success: true, data: profile, message: "Profile created" },
-    201,
-  );
-});
-
-outreachRouter.put("/pitch-profiles/:id", async (c) => {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const body = await c.req.json();
-  const payload = v.parse(UpdatePitchProfileSchema, body);
-  const { repo } = getServices(c.env.DB);
-  const updated = await repo.updatePitchProfile(id, payload, user.id);
-  return c.json({ success: true, data: updated });
-});
-
-outreachRouter.delete("/pitch-profiles/:id", async (c) => {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const { repo } = getServices(c.env.DB);
-  const deleted = await repo.deletePitchProfile(id, user.id);
-  return c.json({ success: true, data: deleted });
-});
+outreachRouter.get("/pitch-profiles", (c) =>
+  getController(c.env.DB).listPitchProfiles(c),
+);
+outreachRouter.get("/pitch-profiles/:id", (c) =>
+  getController(c.env.DB).getPitchProfile(c),
+);
+outreachRouter.post("/pitch-profiles", (c) =>
+  getController(c.env.DB).createPitchProfile(c),
+);
+outreachRouter.put("/pitch-profiles/:id", (c) =>
+  getController(c.env.DB).updatePitchProfile(c),
+);
+outreachRouter.delete("/pitch-profiles/:id", (c) =>
+  getController(c.env.DB).deletePitchProfile(c),
+);
 
 // --- EMAIL LISTS ---
-outreachRouter.get("/lists", async (c) => {
-  const user = c.get("user");
-  const { repo } = getServices(c.env.DB);
-  const lists = await repo.getEmailLists(user.id);
-  return c.json({ success: true, data: lists });
-});
-
-outreachRouter.post("/lists", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(CreateEmailListSchema, body);
-  const { repo } = getServices(c.env.DB);
-  const list = await repo.createEmailList(payload, user.id);
-  return c.json({ success: true, data: list, message: "List created" }, 201);
-});
-
-outreachRouter.delete("/lists/:id", async (c) => {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const { repo } = getServices(c.env.DB);
-  const deleted = await repo.deleteEmailList(id, user.id);
-  return c.json({ success: true, data: deleted });
-});
+outreachRouter.get("/lists", (c) =>
+  getController(c.env.DB).listEmailLists(c),
+);
+outreachRouter.post("/lists", (c) =>
+  getController(c.env.DB).createEmailList(c),
+);
+outreachRouter.delete("/lists/:id", (c) =>
+  getController(c.env.DB).deleteEmailList(c),
+);
 
 // --- EMAILS ---
-async function handleGetEmails(c: any) {
-  const user = c.get("user");
-  const listId = c.req.query("listId")
-    ? Number(c.req.query("listId"))
-    : undefined;
-  const search = c.req.query("search") || undefined;
-  const title = c.req.query("title") || undefined;
-  const limit = c.req.query("limit") ? Number(c.req.query("limit")) : undefined;
-  const { repo } = getServices(c.env.DB);
-  const emails = await repo.getEmails(user.id, {
-    listId,
-    search,
-    limit,
-    title,
-  });
-  return c.json({ success: true, data: emails });
-}
-
-async function handleCreateEmail(c: any) {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(CreateEmailSchema, body);
-  const { repo } = getServices(c.env.DB);
-  const newEmail = await repo.createEmail(payload, user.id);
-  return c.json(
-    { success: true, data: newEmail, message: "Email created" },
-    201,
-  );
-}
-
-async function handleImportEmails(c: any) {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const payload = v.parse(ImportEmailsPayloadSchema, body);
-  const { repo } = getServices(c.env.DB);
-  const inserted = await repo.batchInsertEmails(
-    payload.emails,
-    user.id,
-    payload.listId,
-  );
-  return c.json({
-    success: true,
-    data: inserted,
-    message: `Imported ${inserted.length} emails successfully`,
-  });
-}
-
-async function handleUpdateEmail(c: any) {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const body = await c.req.json();
-  const payload = v.parse(UpdateEmailSchema, body);
-  const { repo } = getServices(c.env.DB);
-  const updated = await repo.updateEmail(id, payload, user.id);
-  return c.json({ success: true, data: updated });
-}
-
-async function handleDeleteEmail(c: any) {
-  const user = c.get("user");
-  const id = Number(c.req.param("id"));
-  const { repo } = getServices(c.env.DB);
-  const deleted = await repo.deleteEmail(id, user.id);
-  return c.json({ success: true, data: deleted });
-}
-
-outreachRouter.get("/emails", handleGetEmails);
-outreachRouter.get("/job-titles", async (c) => {
-  const user = c.get("user");
-  const { repo } = getServices(c.env.DB);
-  const titles = await repo.getJobTitles(user.id);
-  return c.json({ success: true, data: titles });
-});
-outreachRouter.post("/emails", handleCreateEmail);
-outreachRouter.post("/emails/import", handleImportEmails);
-outreachRouter.put("/emails/:id", handleUpdateEmail);
-outreachRouter.delete("/emails/:id", handleDeleteEmail);
-
-// --- SCRAPE, GENERATE, DISPATCH ---
-outreachRouter.get("/ai-status", async (c) => {
-  const user = c.get("user");
-  const { repo } = getServices(c.env.DB);
-  const settings = await repo.getSettings(user.id);
-  const hasEnvKey = Boolean(c.env?.OPENAI_API_KEY?.trim());
-  const hasDbKey = Boolean(settings?.openaiApiKey?.trim());
-
-  return c.json({
-    success: true,
-    data: {
-      isConfigured: hasEnvKey || hasDbKey,
-      source: hasEnvKey ? "env" : hasDbKey ? "db" : "none",
-    },
-  });
-});
-
-outreachRouter.post(
-  "/scrape",
-  requireAdminOrSuperAdmin,
-  async (c) => {
-    const body = await c.req.json();
-    const payload = v.parse(ScrapeUrlSchema, body);
-    const { scraperService } = getServices(c.env.DB);
-    const result = await scraperService.scrapeUrl(payload.url);
-    return c.json({ success: true, data: result });
-  },
+outreachRouter.get("/emails", (c) => getController(c.env.DB).listEmails(c));
+outreachRouter.get("/job-titles", (c) =>
+  getController(c.env.DB).listJobTitles(c),
+);
+outreachRouter.post("/emails", (c) => getController(c.env.DB).createEmail(c));
+outreachRouter.post("/emails/import", (c) =>
+  getController(c.env.DB).importEmails(c),
+);
+outreachRouter.put("/emails/:id", (c) =>
+  getController(c.env.DB).updateEmail(c),
+);
+outreachRouter.delete("/emails/:id", (c) =>
+  getController(c.env.DB).deleteEmail(c),
 );
 
-outreachRouter.post(
-  "/generate",
-  requireAdminOrSuperAdmin,
-  async (c) => {
-    const user = c.get("user");
-    const body = await c.req.json();
-    const payload = v.parse(GenerateDraftSchema, body);
-    const { generatorService } = getServices(c.env.DB);
-    const draft = await generatorService.generateDraft(
-      payload,
-      user.id,
-      c.env?.OPENAI_API_KEY,
-    );
-    return c.json({ success: true, data: draft });
-  },
+// --- SCRAPE, GENERATE, DISPATCH, LOGS ---
+outreachRouter.get("/ai-status", (c) =>
+  getController(c.env.DB).getAiStatus(c),
 );
-
-outreachRouter.post(
-  "/dispatch",
-  requireAdminOrSuperAdmin,
-  async (c) => {
-    const user = c.get("user");
-    const body = await c.req.json();
-    const payload = v.parse(DispatchOutreachSchema, body);
-    const { dispatchService } = getServices(c.env.DB);
-    const result = await dispatchService.dispatchEmail(payload, user.id);
-    return c.json(result);
-  },
+outreachRouter.post("/scrape", requireAdminOrSuperAdmin, (c) =>
+  getController(c.env.DB).scrapeUrl(c),
 );
-
-outreachRouter.get(
-  "/logs",
-  requireAdminOrSuperAdmin,
-  async (c) => {
-    const user = c.get("user");
-    const { repo } = getServices(c.env.DB);
-    const logs = await repo.getOutreachLogs(user.id);
-    return c.json({ success: true, data: logs });
-  },
+outreachRouter.post("/generate", requireAdminOrSuperAdmin, (c) =>
+  getController(c.env.DB).generateDraft(c),
+);
+outreachRouter.post("/dispatch", requireAdminOrSuperAdmin, (c) =>
+  getController(c.env.DB).dispatchEmail(c),
+);
+outreachRouter.get("/logs", requireAdminOrSuperAdmin, (c) =>
+  getController(c.env.DB).listLogs(c),
 );
 
 // --- SETTINGS ---
-outreachRouter.get("/settings", async (c) => {
-  const user = c.get("user");
-  const { repo } = getServices(c.env.DB);
-  const settings = await repo.getSettings(user.id);
-  return c.json({ success: true, data: settings });
-});
-
-outreachRouter.post("/settings", async (c) => {
-  const user = c.get("user");
-  const body = await c.req.json();
-  const { repo } = getServices(c.env.DB);
-  const saved = await repo.saveSettings(user.id, body);
-  return c.json({ success: true, data: saved });
-});
+outreachRouter.get("/settings", (c) =>
+  getController(c.env.DB).getSettings(c),
+);
+outreachRouter.post("/settings", (c) =>
+  getController(c.env.DB).saveSettings(c),
+);

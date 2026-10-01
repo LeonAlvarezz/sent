@@ -1,8 +1,27 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import * as v from "valibot";
 import { GeneratorService } from "../src/modules/outreach/generator.service";
 import { ScraperService } from "../src/modules/outreach/scraper.service";
+import { PitchProfileService } from "../src/modules/outreach/pitch-profile.service";
+import { EmailService } from "../src/modules/outreach/email.service";
+import { OutreachService } from "../src/modules/outreach/outreach.service";
+import {
+  ListEmailsQuerySchema,
+  EmailsListResponseSchema,
+  EMAIL_STATUS,
+} from "@z3/types";
 
 describe("GeneratorService Email Generation & Tone Presets", () => {
+  const originalKey = process.env.OPENAI_API_KEY;
+  beforeAll(() => {
+    delete process.env.OPENAI_API_KEY;
+  });
+  afterAll(() => {
+    if (originalKey !== undefined) {
+      process.env.OPENAI_API_KEY = originalKey;
+    }
+  });
+
   // Mock repo with no database dependency
   const mockRepo: any = {
     getPitchProfileById: async () => null,
@@ -223,3 +242,135 @@ describe("ScraperService Site Name Extraction", () => {
     expect(scraper.extractSiteNameFromUrl("https://southeast-asia-guide.com")).toBe("Southeast Asia Guide");
   });
 });
+
+describe("ListEmailsQuerySchema & EmailsListResponseSchema Validation", () => {
+  it("validates pagination query parameters extending PaginationPropsSchema", () => {
+    const parsed = v.parse(ListEmailsQuerySchema, {
+      listId: 5,
+      search: "editor",
+      title: "Content Editor",
+      page: 2,
+      page_size: 20,
+    });
+
+    expect(parsed.listId).toBe(5);
+    expect(parsed.search).toBe("editor");
+    expect(parsed.title).toBe("Content Editor");
+    expect(parsed.page).toBe(2);
+    expect(parsed.page_size).toBe(20);
+  });
+
+  it("handles empty or omitted pagination parameters with default page and page_size", () => {
+    const parsed = v.parse(ListEmailsQuerySchema, {});
+    expect(parsed.listId).toBeUndefined();
+    expect(parsed.page).toBe(1);
+    expect(parsed.page_size).toBe(10);
+  });
+
+  it("validates paginated emails list response envelope with data and meta", () => {
+    const rawData = [
+      {
+        id: 1,
+        userId: "user-1",
+        email: "partner@example.com",
+        firstName: "John",
+        status: EMAIL_STATUS.ACTIVE,
+        attributes: {},
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+    const response = v.parse(EmailsListResponseSchema, {
+      emails: rawData,
+      meta: {
+        total_count: 142,
+        page: 1,
+        page_size: 10,
+        page_count: 15,
+      },
+    });
+
+    expect(response.meta.total_count).toBe(142);
+    expect(response.meta.page).toBe(1);
+    expect(response.meta.page_size).toBe(10);
+    expect(response.meta.page_count).toBe(15);
+    expect(response.emails.length).toBe(1);
+    expect(response.emails[0].email).toBe("partner@example.com");
+  });
+});
+
+describe("PitchProfileService & EmailService & OutreachService Layer", () => {
+  it("PitchProfileService delegates correctly and throws NotFoundException when missing", async () => {
+    const mockRepo: any = {
+      getPitchProfiles: async (userId: string) => [
+        { id: 1, userId, name: "Default Pitch" },
+      ],
+      getPitchProfile: async (id: number, userId: string) =>
+        id === 1 ? { id: 1, userId, name: "Default Pitch" } : null,
+      createPitchProfile: async (data: any, userId: string) => ({
+        id: 2,
+        userId,
+        ...data,
+      }),
+      updatePitchProfile: async (id: number, data: any, userId: string) =>
+        id === 1 ? { id: 1, userId, ...data } : null,
+      deletePitchProfile: async (id: number, userId: string) =>
+        id === 1 ? { id: 1, userId } : null,
+    };
+
+    const service = new PitchProfileService(mockRepo);
+    const profiles = await service.getPitchProfiles("user-1");
+    expect(profiles.length).toBe(1);
+
+    const profile = await service.getPitchProfile(1, "user-1");
+    expect(profile.name).toBe("Default Pitch");
+
+    expect(service.getPitchProfile(999, "user-1")).rejects.toThrow();
+  });
+
+  it("EmailService delegates list and count queries properly", async () => {
+    const mockRepo: any = {
+      getEmails: async (userId: string, opts: any) => [
+        { id: 10, userId, email: "test@domain.com" },
+      ],
+      getEmailsCount: async (userId: string, opts: any) => 1,
+      getJobTitles: async (userId: string) => [
+        { title: "Founder", count: 5 },
+      ],
+    };
+
+    const service = new EmailService(mockRepo);
+    const emails = await service.getEmails("user-1", { page: 1, page_size: 10 });
+    expect(emails.length).toBe(1);
+
+    const count = await service.getEmailsCount("user-1");
+    expect(count).toBe(1);
+
+    const titles = await service.getJobTitles("user-1");
+    expect(titles[0].title).toBe("Founder");
+  });
+
+  it("OutreachService computes AI status from env and db settings", async () => {
+    const mockRepo: any = {
+      getSettings: async (userId: string) => ({ openaiApiKey: "db-secret-key" }),
+    };
+
+    const service = new OutreachService(mockRepo);
+    const statusWithEnv = await service.getAiStatus("user-1", "env-key");
+    expect(statusWithEnv.isConfigured).toBe(true);
+    expect(statusWithEnv.source).toBe("env");
+
+    const statusWithDb = await service.getAiStatus("user-1", undefined);
+    expect(statusWithDb.isConfigured).toBe(true);
+    expect(statusWithDb.source).toBe("db");
+
+    const emptyRepo: any = {
+      getSettings: async () => ({}),
+    };
+    const emptyService = new OutreachService(emptyRepo);
+    const statusNone = await emptyService.getAiStatus("user-1", undefined);
+    expect(statusNone.isConfigured).toBe(false);
+    expect(statusNone.source).toBe("none");
+  });
+});
+

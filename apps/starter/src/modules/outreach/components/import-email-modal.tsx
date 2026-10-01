@@ -41,7 +41,8 @@ export function ImportEmailModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Default to querying all existing emails from backend if not explicitly provided
-  const { data: dbEmails = [] } = useEmailsQuery();
+  const { data: dbEmailsData } = useEmailsQuery();
+  const dbEmails = dbEmailsData?.emails ?? [];
   const effectiveExistingEmails = existingEmails ?? dbEmails;
 
   const {

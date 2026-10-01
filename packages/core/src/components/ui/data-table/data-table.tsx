@@ -113,6 +113,12 @@ export interface DataTableProps<
   initialPageSize?: number;
   /** Whether to automatically reset page index when data, sorting, or filters change. Defaults to false. */
   autoResetPageIndex?: boolean;
+  /** Total number of rows across all pages for server-side / manual pagination. */
+  rowCount?: number;
+  /** Total number of pages for server-side / manual pagination. Auto-calculated if rowCount is provided. */
+  pageCount?: number;
+  /** Whether to enable manual / server-side pagination. Automatically true when rowCount or pageCount is provided. */
+  manualPagination?: boolean;
   pagination?: PaginationState;
   onPaginationChange?:
     | React.Dispatch<React.SetStateAction<PaginationState>>
@@ -142,6 +148,9 @@ function DataTableRoot<
   pageSizeOptions = [10, 20, 30, 40, 50],
   initialPageSize = 10,
   autoResetPageIndex = false,
+  rowCount,
+  pageCount,
+  manualPagination,
   pagination: paginationProp,
   onPaginationChange: onPaginationChangeProp,
   toolbarActions,
@@ -188,11 +197,17 @@ function DataTableRoot<
     [freezeActionColumn],
   );
 
+  const isManual =
+    manualPagination ?? (rowCount !== undefined || pageCount !== undefined);
+
   const table = useTable({
     features: defaultFeatures,
     data,
     columns: columns as any,
     autoResetPageIndex,
+    manualPagination: isManual,
+    rowCount,
+    pageCount,
     state: {
       sorting,
       columnFilters,
@@ -210,14 +225,29 @@ function DataTableRoot<
 
   // Clamp pageIndex if total pageCount drops below current pageIndex
   React.useEffect(() => {
-    const pageCount = table.getPageCount();
-    if (pageCount > 0 && activePagination.pageIndex >= pageCount) {
-      handlePaginationChange((prev: PaginationState) => ({
-        ...prev,
-        pageIndex: Math.max(0, pageCount - 1),
-      }));
+    if (loading) return;
+    if (isManual && pageCount === undefined && rowCount === undefined) return;
+
+    const totalPages = table.getPageCount();
+    if (totalPages > 0 && activePagination.pageIndex >= totalPages) {
+      handlePaginationChange((prev: PaginationState) => {
+        const clampedIndex = Math.max(0, totalPages - 1);
+        if (prev.pageIndex === clampedIndex) return prev;
+        return {
+          ...prev,
+          pageIndex: clampedIndex,
+        };
+      });
     }
-  }, [data, table, activePagination.pageIndex, handlePaginationChange]);
+  }, [
+    loading,
+    isManual,
+    pageCount,
+    rowCount,
+    activePagination.pageIndex,
+    handlePaginationChange,
+    table,
+  ]);
 
   return (
     <div className={cn("w-full space-y-3", className)}>
