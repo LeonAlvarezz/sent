@@ -9,7 +9,7 @@ import {
   SearchIcon,
   Unauthorized,
   useAuth,
-  useQueryFilters,
+  useTableQuery,
 } from "@z3/admin-core";
 import { USER_ROLE } from "@z3/types";
 import type { ListUsersQuery, User } from "@z3/types";
@@ -20,19 +20,13 @@ import { ChangeRoleModal } from "./components/change-role-modal";
 export function UserPage() {
   const { user: currentUser, isLoading: isAuthLoading } = useAuth();
 
-  const {
-    filters,
-    searchValue,
-    setSearchValue,
-    setFilter,
-    resetFilters,
-    isFiltered,
-  } = useQueryFilters<ListUsersQuery>({
+  const table = useTableQuery<ListUsersQuery>({
+    mode: "client",
+    defaultPageSize: 10,
     defaultValues: {
       search: "",
       role: undefined,
-      cursor: undefined,
-      limit: 20,
+      limit: 50,
       order: "desc",
     },
     debounceMs: 300,
@@ -44,7 +38,9 @@ export function UserPage() {
 
   const isAuthorized = currentUser?.role === USER_ROLE.SUPER_ADMIN;
 
-  const { data, isLoading } = useUsersQuery(filters, { enabled: isAuthorized });
+  const { data, isLoading } = useUsersQuery(table.queryParams, {
+    enabled: isAuthorized,
+  });
 
   const users = data?.users ?? [];
 
@@ -87,22 +83,24 @@ export function UserPage() {
         columns={columns}
         data={users}
         loading={isLoading}
-        toolbar={(table) => (
+        pageSizeOptions={[10, 20, 30, 50]}
+        {...table.paginationProps()}
+        toolbar={(t) => (
           <DataTable.Toolbar>
             <div className="flex flex-1 flex-wrap items-center gap-2">
               <Input
                 placeholder="Search users by name or email..."
-                value={searchValue}
-                onChange={setSearchValue}
+                value={table.searchValue}
+                onChange={table.setSearchValue}
                 startIcon={<SearchIcon />}
                 containerClassName="h-9 w-64 sm:w-80"
               />
               <NativeSelect
-                value={filters.role ?? "all"}
+                value={table.filters.role ?? "all"}
                 onChange={(e) => {
                   const role = e.target.value;
-                  if (role === "all") return setFilter("role", undefined);
-                  setFilter("role", role as USER_ROLE);
+                  if (role === "all") return table.setFilter("role", undefined);
+                  table.setFilter("role", role as USER_ROLE);
                 }}
                 className="h-8 text-xs w-36"
                 options={[
@@ -112,11 +110,11 @@ export function UserPage() {
                   { value: USER_ROLE.USER, label: "Standard User" },
                 ]}
               />
-              {isFiltered && (
+              {table.isFiltered && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={resetFilters}
+                  onClick={table.resetFilters}
                   className="h-8 px-2 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
                 >
                   <CloseIcon className="size-3.5" />
@@ -125,7 +123,7 @@ export function UserPage() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <DataTable.ViewOptions table={table} />
+              <DataTable.ViewOptions table={t} />
             </div>
           </DataTable.Toolbar>
         )}
