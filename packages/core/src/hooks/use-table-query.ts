@@ -243,10 +243,10 @@ export function useTableQuery<
     const base = replaceAll ? {} : activeParams;
     const next = {
       ...base,
-      ...updates,
       ...(mode === "server" && resetPage
         ? { [pageKey]: 1, [pageSizeKey]: pageSize }
         : {}),
+      ...updates,
     };
     const sanitized = sanitizeParams(next, defaultValues);
 
