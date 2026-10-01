@@ -23,7 +23,7 @@ import type {
   ColumnVisibilityState,
 } from "@tanstack/react-table";
 import { cn } from "../../../libs/cn";
-import { InboxIcon } from "../icons";
+import { InboxIcon, SpinnerIcon } from "../icons";
 import { Tooltip } from "../tooltip";
 import { Skeleton } from "../skeleton";
 import { DataTablePagination } from "./data-table-pagination";
@@ -107,6 +107,8 @@ export interface DataTableProps<
   columns: ColumnDef<DefaultDataTableFeatures, TData, TValue>[];
   data: TData[];
   loading?: boolean;
+  /** Whether table is actively fetching data in the background (dims tbody and shows centered spinner). */
+  isFetching?: boolean;
   enablePagination?: boolean;
   enableColumnViewToggle?: boolean;
   pageSizeOptions?: number[];
@@ -148,6 +150,7 @@ function DataTableRoot<
   columns,
   data,
   loading = false,
+  isFetching = false,
   enablePagination = true,
   enableColumnViewToggle = true,
   pageSizeOptions = [10, 20, 30, 40, 50],
@@ -207,6 +210,9 @@ function DataTableRoot<
       ? mode === "server"
       : rowCount !== undefined || pageCount !== undefined;
 
+  const isInitialLoading = loading && data.length === 0;
+  const isBackgroundFetching = isFetching || (loading && data.length > 0);
+
   const table = useTable({
     features: defaultFeatures,
     data,
@@ -232,7 +238,7 @@ function DataTableRoot<
 
   // Clamp pageIndex if total pageCount drops below current pageIndex
   React.useEffect(() => {
-    if (loading) return;
+    if (loading || isFetching) return;
     if (isServer && pageCount === undefined && rowCount === undefined) return;
 
     const totalPages = table.getPageCount();
@@ -248,6 +254,7 @@ function DataTableRoot<
     }
   }, [
     loading,
+    isFetching,
     isServer,
     pageCount,
     rowCount,
@@ -275,7 +282,7 @@ function DataTableRoot<
 
       {/* Main Table Shell */}
       <div className="@container rounded-lg border border-border bg-card/90 overflow-hidden shadow-xs">
-        <div className="overflow-x-auto table-scrollbar">
+        <div className="relative overflow-x-auto table-scrollbar">
           <table
             className="w-full table-fixed text-left text-sm text-foreground"
             style={{ minWidth: table.getTotalSize() }}
@@ -325,8 +332,14 @@ function DataTableRoot<
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-border/60">
-              {loading ? (
+            <tbody
+              className={cn(
+                "divide-y divide-border/60 transition-opacity duration-200",
+                isBackgroundFetching &&
+                  "opacity-40 pointer-events-none select-none",
+              )}
+            >
+              {isInitialLoading ? (
                 // Loading Skeleton Rows
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={`skeleton-${index}`}>
@@ -430,6 +443,13 @@ function DataTableRoot<
               )}
             </tbody>
           </table>
+
+          {/* Centered Loading Spinner overlay when fetching existing data */}
+          {isBackgroundFetching && (
+            <div className="absolute inset-x-0 bottom-0 top-10 flex items-center justify-center pointer-events-none z-30">
+              <SpinnerIcon className="size-5 animate-spin" />
+            </div>
+          )}
         </div>
 
         {/* Pagination Bar */}
@@ -438,6 +458,7 @@ function DataTableRoot<
             table={table as any}
             pageSizeOptions={pageSizeOptions}
             loading={loading}
+            isFetching={isFetching}
           />
         )}
       </div>

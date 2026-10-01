@@ -38,7 +38,7 @@ export function UserPage() {
 
   const isAuthorized = currentUser?.role === USER_ROLE.SUPER_ADMIN;
 
-  const { data, isLoading } = useUsersQuery(table.queryParams, {
+  const { data, isLoading, isFetching } = useUsersQuery(table.queryParams, {
     enabled: isAuthorized,
   });
 
@@ -83,6 +83,7 @@ export function UserPage() {
         columns={columns}
         data={users}
         loading={isLoading}
+        isFetching={isFetching}
         pageSizeOptions={[10, 20, 30, 50]}
         {...table.paginationProps()}
         toolbar={(t) => (

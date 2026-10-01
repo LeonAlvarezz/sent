@@ -73,7 +73,11 @@ export function SeoPartnerPage() {
   const { data: targets = [] } = useSeoPartnerTargetsQuery({
     enabled: isAuthorized,
   });
-  const { data: partnersData, isLoading } = useSeoPartnersQuery(
+  const {
+    data: partnersData,
+    isLoading,
+    isFetching,
+  } = useSeoPartnersQuery(
     {
       search: table.queryParams.search,
       status: table.filters.status !== "all" ? table.filters.status : undefined,
@@ -257,6 +261,7 @@ export function SeoPartnerPage() {
         columns={columns}
         data={partners}
         loading={isLoading}
+        isFetching={isFetching}
         pageSizeOptions={[10, 20, 30, 50]}
         {...table.paginationProps(partnersData?.meta)}
         toolbar={(tableInstance) => (

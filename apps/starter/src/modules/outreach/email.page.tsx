@@ -78,7 +78,11 @@ export function EmailPage() {
     [jobTitles],
   );
 
-  const { data: emailData, isLoading } = useEmailsQuery({
+  const {
+    data: emailData,
+    isLoading,
+    isFetching,
+  } = useEmailsQuery({
     listId: table.filters.listId,
     title: table.filters.title !== "all" ? table.filters.title : undefined,
     search: table.queryParams.search,
@@ -293,6 +297,7 @@ export function EmailPage() {
         columns={columns}
         data={emails}
         loading={isLoading}
+        isFetching={isFetching}
         pageSizeOptions={[10, 20, 30, 50]}
         {...table.paginationProps(emailData?.meta)}
         toolbar={(tableInstance) => (

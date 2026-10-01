@@ -11,12 +11,14 @@ export interface DataTablePaginationProps<
   table: ReactTable<DefaultDataTableFeatures, TData>;
   pageSizeOptions?: number[];
   loading?: boolean;
+  isFetching?: boolean;
 }
 
 export function DataTablePagination<TData extends Record<string, any> = any>({
   table,
   pageSizeOptions = [10, 20, 30, 40, 50],
   loading = false,
+  isFetching = false,
 }: DataTablePaginationProps<TData>) {
   const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
   const totalRowCount = table.getRowCount();
@@ -24,12 +26,15 @@ export function DataTablePagination<TData extends Record<string, any> = any>({
   const pageSize = table.state.pagination.pageSize;
   const pageCount = table.getPageCount();
 
+  const isInitialLoading = loading && totalRowCount === 0;
+  const isBusy = loading || isFetching;
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 pt-5 pb-3 border-t border-border">
       {/* Selected count info */}
       <div className="flex gap-10 sm:items-center">
         <div className="text-xs text-muted-foreground order-2 sm:order-1">
-          {loading ? (
+          {isInitialLoading ? (
             <Skeleton className="h-4 w-20" />
           ) : selectedRowCount > 0 ? (
             <span>
@@ -44,7 +49,7 @@ export function DataTablePagination<TData extends Record<string, any> = any>({
       <div
         className={cn(
           "flex items-center gap-6 lg:gap-8 order-1 sm:order-2 w-full sm:w-auto justify-between sm:justify-end",
-          loading && "opacity-50 pointer-events-none",
+          isBusy && "opacity-50 pointer-events-none",
         )}
       >
         <div className="flex items-center gap-2">
@@ -58,11 +63,11 @@ export function DataTablePagination<TData extends Record<string, any> = any>({
             sizeVariant="sm"
             containerClassName="h-8"
             className="w-12 text-xs"
-            disabled={loading}
+            disabled={isBusy}
           />
         </div>
         {/* Page numbers & Navigation controls */}
-        {loading && pageCount <= 0 ? (
+        {isInitialLoading && pageCount <= 0 ? (
           <div className="flex items-center space-x-1.5">
             <Skeleton className="size-8 rounded-lg" />
             <Skeleton className="size-8 rounded-lg" />
