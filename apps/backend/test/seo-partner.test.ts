@@ -6,6 +6,7 @@ import {
   ListSeoPartnersQuerySchema,
   SeoPartnersListResponseSchema,
   SEO_PARTNER_STATUS,
+  TargetWebsiteAuthoritySchema,
 } from "@z3/types";
 import { SeoPartnerService } from "../src/modules/seo-partner/seo-partner.service";
 
@@ -114,6 +115,12 @@ describe("SeoPartnerService Competitor Backlinks with Existing Partner Detection
           },
         ],
         totalCount: 2,
+        targetAuthority: {
+          target: "vietnamtourist.com",
+          rank: 58,
+          backlinks: 1200,
+          referringDomains: 340,
+        },
       }),
     };
 
@@ -126,6 +133,9 @@ describe("SeoPartnerService Competitor Backlinks with Existing Partner Detection
     );
 
     expect(response.items.length).toBe(2);
+    expect(response.targetAuthority).toBeDefined();
+    expect(response.targetAuthority?.rank).toBe(58);
+    expect(response.targetAuthority?.target).toBe("vietnamtourist.com");
     const planetD = response.items.find((i) => i.domain === "theplanetd.com");
     expect(planetD).toBeDefined();
     expect(planetD?.isExistingPartner).toBe(true);
@@ -133,6 +143,22 @@ describe("SeoPartnerService Competitor Backlinks with Existing Partner Detection
     const other = response.items.find((i) => i.domain === "randomtravelblog.com");
     expect(other).toBeDefined();
     expect(other?.isExistingPartner).toBe(false);
+  });
+});
+
+describe("TargetWebsiteAuthoritySchema Validation", () => {
+  it("validates target website authority schema", () => {
+    const valid = v.parse(TargetWebsiteAuthoritySchema, {
+      target: "asiatoptravel.com",
+      rank: 22,
+      backlinks: 821,
+      referringDomains: 686,
+      referringPages: 796,
+    });
+    expect(valid.target).toBe("asiatoptravel.com");
+    expect(valid.rank).toBe(22);
+    expect(valid.backlinks).toBe(821);
+    expect(valid.referringDomains).toBe(686);
   });
 });
 

@@ -137,11 +137,6 @@ export class SeoPartnerController {
     const body = await c.req.json();
     const payload = v.parse(CompetitorBacklinksQuerySchema, body);
 
-    console.log({
-      login: c.env.DATAFORSEO_LOGIN,
-      password: c.env.DATAFORSEO_PASSWORD,
-    });
-
     const dataForSeo = new DataForSeoService(
       c.env.DATAFORSEO_LOGIN,
       c.env.DATAFORSEO_PASSWORD,
@@ -169,6 +164,7 @@ export class SeoPartnerController {
       data: {
         items: result.items,
         total: result.totalCount,
+        targetAuthority: result.targetAuthority,
       },
     });
   };

@@ -120,3 +120,15 @@ export const CompetitorBacklinkItemSchema = v.object({
 });
 
 export type CompetitorBacklinkItem = v.InferOutput<typeof CompetitorBacklinkItemSchema>;
+
+export const TargetWebsiteAuthoritySchema = v.object({
+  target: v.string(),
+  rank: v.number(),
+  backlinks: v.optional(v.number()),
+  referringDomains: v.optional(v.number()),
+  referringPages: v.optional(v.number()),
+  brokenBacklinks: v.optional(v.number()),
+  spamScore: v.optional(v.number()),
+});
+
+export type TargetWebsiteAuthority = v.InferOutput<typeof TargetWebsiteAuthoritySchema>;

@@ -5,12 +5,15 @@ import {
   Button,
   CloseIcon,
   DataTable,
+  formatNumber,
   InfoIcon,
   Input,
   isSpamBacklink,
+  LinkIcon,
   NativeSelect,
   PageLoadingSkeleton,
   SearchIcon,
+  Skeleton,
   SpinnerIcon,
   Switch,
   Tag,
@@ -20,7 +23,11 @@ import {
 } from "@z3/admin-core";
 import { getErrorMessage } from "@/libs/api-client";
 import { SEO_PARTNER_STATUS, USER_ROLE } from "@z3/types";
-import type { CompetitorBacklinkItem, CreateSeoPartner } from "@z3/types";
+import type {
+  CompetitorBacklinkItem,
+  CreateSeoPartner,
+  TargetWebsiteAuthority,
+} from "@z3/types";
 import {
   useCompetitorBacklinksMutation,
   useImportSeoPartnersMutation,
@@ -49,6 +56,8 @@ export function BacklinkResearchPage() {
 
   // Query state & results
   const [items, setItems] = useState<CompetitorBacklinkItem[]>([]);
+  const [targetAuthority, setTargetAuthority] =
+    useState<TargetWebsiteAuthority | null>(null);
   const [hasQueried, setHasQueried] = useState(false);
   const [queriedTarget, setQueriedTarget] = useState("");
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -85,6 +94,7 @@ export function BacklinkResearchPage() {
 
       const fetchedItems = res.items;
       setItems(fetchedItems);
+      setTargetAuthority(res.targetAuthority ?? null);
       setHasQueried(true);
       setQueriedTarget(
         cleanUrl.replace(/^https?:\/\//i, "").replace(/\/+$/, ""),
@@ -270,12 +280,9 @@ export function BacklinkResearchPage() {
   ).length;
   const existingCount = items.filter(
     (i) =>
-      i.isExistingPartner &&
-      (!excludeSpam || !(i.isSpam || isSpamBacklink(i))),
+      i.isExistingPartner && (!excludeSpam || !(i.isSpam || isSpamBacklink(i))),
   ).length;
-  const spamCount = items.filter(
-    (i) => i.isSpam || isSpamBacklink(i),
-  ).length;
+  const spamCount = items.filter((i) => i.isSpam || isSpamBacklink(i)).length;
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full">
@@ -391,6 +398,104 @@ export function BacklinkResearchPage() {
             </div>
           )}
         </div>
+
+        {/* Website Authority Overview Card (Rendered below the switch toggles) */}
+        {backlinkMutation.isPending && (
+          <div className="mt-1 flex items-center gap-4 p-4 rounded-xl border border-border bg-card/60">
+            <Skeleton className="size-14 rounded-xl" />
+            <div className="flex flex-col gap-2 flex-1">
+              <Skeleton className="h-4 w-44 rounded" />
+              <Skeleton className="h-3 w-64 rounded" />
+            </div>
+          </div>
+        )}
+
+        {hasQueried && (targetAuthority || items.length > 0) && (
+          <div className="mt-1 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card shadow-xs">
+            {/* Left: Website Authority Score & Tier */}
+            <div className="flex items-center gap-3.5">
+              <div className="flex flex-col items-center justify-center size-14 rounded-xl bg-accent/40 border border-border shadow-xs shrink-0">
+                <span className="text-xl font-bold font-mono tracking-tight text-foreground">
+                  {targetAuthority?.rank !== undefined
+                    ? targetAuthority.rank
+                    : "—"}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  / 100
+                </span>
+              </div>
+
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground">
+                    Website Authority Score
+                  </span>
+                  {targetAuthority?.rank !== undefined && (
+                    <Tag
+                      color={
+                        targetAuthority.rank >= 60
+                          ? "emerald"
+                          : targetAuthority.rank >= 30
+                            ? "blue"
+                            : "amber"
+                      }
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {targetAuthority.rank >= 60
+                        ? "High Authority"
+                        : targetAuthority.rank >= 30
+                          ? "Moderate"
+                          : "Low Authority"}
+                    </Tag>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                  <LinkIcon className="size-3 text-muted-foreground shrink-0" />
+                  <span className="font-mono text-foreground font-medium">
+                    {targetAuthority?.target || queriedTarget}
+                  </span>
+                  <span>authority & backlink profile</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Backlink Profile Summary Metrics */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 border-t md:border-t-0 md:border-l border-border/80 pt-3 md:pt-0 md:pl-6 text-xs">
+              <div className="flex flex-col">
+                <span className="text-muted-foreground text-[11px]">
+                  Total Backlinks
+                </span>
+                <span className="font-semibold text-foreground text-sm font-mono mt-0.5">
+                  {targetAuthority?.backlinks !== undefined
+                    ? formatNumber(targetAuthority.backlinks)
+                    : formatNumber(items.length)}
+                </span>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-muted-foreground text-[11px]">
+                  Referring Domains
+                </span>
+                <span className="font-semibold text-foreground text-sm font-mono mt-0.5">
+                  {targetAuthority?.referringDomains !== undefined
+                    ? formatNumber(targetAuthority.referringDomains)
+                    : formatNumber(items.length)}
+                </span>
+              </div>
+
+              {targetAuthority?.referringPages !== undefined && (
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-[11px]">
+                    Referring Pages
+                  </span>
+                  <span className="font-semibold text-foreground text-sm font-mono mt-0.5">
+                    {formatNumber(targetAuthority.referringPages)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </form>
 
       {/* Main Results View */}
@@ -462,6 +567,7 @@ export function BacklinkResearchPage() {
             loading={backlinkMutation.isPending}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
+            enableColumnViewToggle={false}
             getRowId={(row) => row.domain}
             pageSizeOptions={[10, 20, 50, 100]}
             initialPageSize={20}

@@ -5,6 +5,7 @@ import type {
   UpdateSeoPartner,
   CompetitorBacklinksQuery,
   CompetitorBacklinkItem,
+  TargetWebsiteAuthority,
 } from "@z3/types";
 import { NotFoundException, BadRequestException } from "@/lib";
 
@@ -62,7 +63,11 @@ export class SeoPartnerService {
     userId: string,
     query: CompetitorBacklinksQuery,
     dataForSeo: DataForSeoService,
-  ): Promise<{ items: CompetitorBacklinkItem[]; totalCount: number }> {
+  ): Promise<{
+    items: CompetitorBacklinkItem[];
+    totalCount: number;
+    targetAuthority?: TargetWebsiteAuthority;
+  }> {
     const [result, existingWebsites] = await Promise.all([
       dataForSeo.getCompetitorBacklinks(query),
       this.repo.getExistingWebsites(userId),
@@ -79,6 +84,7 @@ export class SeoPartnerService {
     return {
       items,
       totalCount: result.totalCount,
+      targetAuthority: result.targetAuthority,
     };
   }
 }

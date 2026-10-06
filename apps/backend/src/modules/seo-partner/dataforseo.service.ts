@@ -1,3 +1,5 @@
+import type { TargetWebsiteAuthority } from "@z3/types";
+
 export interface DataForSeoBacklinkRaw {
   domain: string;
   pageTitle?: string;
@@ -23,6 +25,7 @@ export interface FetchCompetitorBacklinksOptions {
 export interface FetchCompetitorBacklinksResult {
   items: DataForSeoBacklinkRaw[];
   totalCount: number;
+  targetAuthority?: TargetWebsiteAuthority;
 }
 
 export class DataForSeoService {
@@ -80,17 +83,32 @@ export class DataForSeoService {
     ];
 
     const credentials = btoa(`${this.login}:${this.password}`);
-    const res = await fetch(
-      "https://api.dataforseo.com/v3/backlinks/backlinks/live",
+    const summaryPayload = [
       {
+        target: cleanTarget,
+        include_subdomains: true,
+        rank_scale: "one_hundred",
+      },
+    ];
+
+    const [res, summaryRes] = await Promise.all([
+      fetch("https://api.dataforseo.com/v3/backlinks/backlinks/live", {
         method: "POST",
         headers: {
           Authorization: `Basic ${credentials}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      },
-    );
+      }),
+      fetch("https://api.dataforseo.com/v3/backlinks/summary/live", {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(summaryPayload),
+      }).catch(() => null),
+    ]);
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
@@ -163,9 +181,35 @@ export class DataForSeoService {
       };
     });
 
+    let targetAuthority: TargetWebsiteAuthority | undefined;
+    if (summaryRes && summaryRes.ok) {
+      try {
+        const summaryData: any = await summaryRes.json();
+        const summaryTask = summaryData.tasks?.[0];
+        if (summaryTask && summaryTask.status_code === 20000) {
+          const summaryResult = summaryTask.result?.[0];
+          if (summaryResult) {
+            targetAuthority = {
+              target: cleanTarget,
+              rank: typeof summaryResult.rank === "number" ? summaryResult.rank : 0,
+              backlinks: summaryResult.backlinks ?? 0,
+              referringDomains: summaryResult.referring_domains ?? 0,
+              referringPages: summaryResult.referring_pages ?? 0,
+              brokenBacklinks: summaryResult.broken_backlinks ?? 0,
+              spamScore:
+                summaryResult.backlinks_spam_score ?? summaryResult.spam_score,
+            };
+          }
+        }
+      } catch {
+        // Non-blocking: summary endpoint failure does not block backlink discovery
+      }
+    }
+
     return {
       items,
       totalCount,
+      targetAuthority,
     };
   }
 

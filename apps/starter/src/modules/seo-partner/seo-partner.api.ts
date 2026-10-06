@@ -14,6 +14,7 @@ import type {
   UpdateSeoPartner,
   CompetitorBacklinksQuery,
   CompetitorBacklinkItem,
+  TargetWebsiteAuthority,
 } from "@z3/types";
 
 export const SEO_PARTNER_KEYS = {
@@ -108,6 +109,7 @@ export function useDeleteSeoPartnerMutation() {
 export interface CompetitorBacklinksResult {
   items: CompetitorBacklinkItem[];
   total: number;
+  targetAuthority?: TargetWebsiteAuthority;
 }
 
 export function useCompetitorBacklinksMutation() {
