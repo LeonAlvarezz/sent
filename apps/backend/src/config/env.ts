@@ -28,7 +28,7 @@ const envSchema = v.object({
     v.transform((val) => Number(val)),
     v.number("PASSWORD_SALT must be a number"),
   ),
-  DATABASE_URL: v.string(),
+  DATABASE_URL: v.optional(v.string()),
   BETTER_AUTH_SECRET: v.string(),
   BETTER_AUTH_URL: v.string(),
   CORS_ORIGINS: corsOriginsSchema,

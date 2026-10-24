@@ -132,7 +132,7 @@ function ModalRoot({
         {/* Backdrop with fade transition */}
         <DialogBackdrop
           transition
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-200 ease-out data-closed:opacity-0"
+          className="fixed inset-0 bg-black/60 transition-opacity duration-200 ease-out data-closed:opacity-0"
         />
 
         {/* Centered modal container */}

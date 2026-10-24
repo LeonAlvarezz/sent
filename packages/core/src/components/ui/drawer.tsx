@@ -67,7 +67,7 @@ export function Drawer({
       <Dialog onClose={onClose} className="relative z-50">
         <DialogBackdrop
           transition
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition duration-200 ease-out data-closed:opacity-0"
+          className="fixed inset-0 bg-black/60 transition duration-200 ease-out data-closed:opacity-0"
         />
 
         <div className="fixed inset-0 flex overflow-hidden">

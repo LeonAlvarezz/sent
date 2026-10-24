@@ -17,14 +17,13 @@ z3-admin/
 │   ├── create-z3-admin/   # Scaffolding CLI for generating Mock/Fullstack projects
 │   ├── eslint-config/     # Shared ESLint configuration (@z3/eslint-config)
 │   └── typescript-config/ # Shared TypeScript base configurations (@z3/typescript-config)
-├── docker-compose.yml     # Local PostgreSQL 16 container definition
 └── package.json           # Monorepo root scripts & workspace configuration
 ```
 
 - **Package Manager**: [Bun](https://bun.sh) (uses `workspace:*` dependency protocol).
 - **Monorepo Build System**: [Turborepo](https://turbo.build) for parallel builds and caching.
 - **Frontend App (`apps/starter`)**: [React 19](https://react.dev), [Vite](https://vitejs.dev), [Tailwind CSS v4](https://tailwindcss.com), [TanStack Router](https://tanstack.com/router) (file-based routing), and [TanStack Query](https://tanstack.com/query).
-- **Backend API (`apps/backend`)**: [Express 5](https://expressjs.com), [Drizzle ORM](https://orm.drizzle.team) with PostgreSQL, [Better Auth](https://www.better-auth.com), and [Scalar API Reference](https://scalar.com) (`/docs`).
+- **Backend API (`apps/backend`)**: Cloudflare Workers / Hono, [Drizzle ORM](https://orm.drizzle.team) with Cloudflare D1 (SQLite), [Better Auth](https://www.better-auth.com), and [Scalar API Reference](https://scalar.com) (`/docs`).
 - **Core Library (`packages/core`)**: Headless UI v2 primitives, compound sidebar & workspace tabs, and centralized OKLCH theme tokens.
 - **Type Library (`packages/types`)**: End-to-end schema validation using [Valibot](https://valibot.dev) shared between backend and frontend.
 
@@ -555,18 +554,14 @@ export function CustomCompoundSelect() {
 
 ---
 
-## 🗄️ Database & Container (`docker-compose.yml`)
+## 🗄️ Database (`Cloudflare D1` & `Drizzle ORM`)
 
-The backend requires a PostgreSQL database managed through **Drizzle ORM**. A turnkey PostgreSQL 16 Alpine container configuration is provided at the repository root ([`docker-compose.yml`](file:///Users/leonhong/Personal%20Project/z3-admin/docker-compose.yml)).
+The backend utilizes **Cloudflare D1** (serverless SQLite) managed through **Drizzle ORM**. No external database server or Docker container is required.
 
 ### Quick Database Commands
 
 ```bash
-# Start PostgreSQL container in background (port 5432)
-bun docker:up
-# or: docker compose up -d
-
-# Run Drizzle database migrations
+# Run Drizzle database migrations locally (applies to local D1 via Wrangler)
 bun db:migrate
 
 # Seed initial admin & standard accounts
@@ -575,12 +570,8 @@ bun db:seed
 # Inspect database schema with Drizzle Studio
 bun --cwd apps/backend studio
 
-# Reset database (drops all tables & enum types)
+# Reset database (drops all tables & records)
 bun db:reset
-
-# Stop PostgreSQL container
-bun docker:down
-# or: docker compose down
 ```
 
 ---
@@ -651,15 +642,14 @@ cp apps/starter/.env.example apps/starter/.env
 bun run dev:mock
 ```
 
-#### 2. Fullstack Mode (Express API + Drizzle ORM + PostgreSQL)
+#### 2. Fullstack Mode (Hono API + Drizzle ORM + Cloudflare D1)
 
 ```bash
 # 1. Configure environment variables
 cp apps/backend/.env.example apps/backend/.env
 cp apps/starter/.env.example apps/starter/.env
 
-# 2. Start PostgreSQL container & run migrations
-bun docker:up
+# 2. Apply migrations to local D1 database & seed accounts
 bun db:migrate
 bun db:seed
 

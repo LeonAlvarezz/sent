@@ -24,24 +24,13 @@ Initially, I wanted to write raw SQL for this project. However, I just find it t
 For authentication, I'm not quite fond of JWT as I prefer Session all the way, especially with http-only cookies. I've always love to roll my own auth, but recently I found [Better Auth](https://www.better-auth.com/) to be extremely good. As it handle almost everything that's hectic with rolling your own auth. My recommendation is, you should start with rolling your own auth, once you know the in and out and familliar with it, then use Better Auth.
 
 ## Set up 
-I like to start my project with Postgres, you can use any other db provider as long as it's supported by *Drizzle*. TO get started, you will need a postgres db. There are many ways to do this but the method that I prefer is through Docker (fast & easy). To get started, pull the postgres image:
+This project utilizes **Cloudflare D1** (SQLite) with **Drizzle ORM**. No external database or Docker container is required. Local development leverages Wrangler's local D1 simulation out-of-the-box.
 
-``` bash
-docker pull postgres
-```
-Then, start the instance:
-``` bash
-docker run --name {{CONTAINER_NAME}} -p {{PORT}}:5432 -e POSTGRES_USER={{USERNAME}} -e POSTGRES_PASSWORD={{PASSWORD}} -d {{DB_NAME}}
-```
-After that, it's done🎉🎉, just add the db credential into the env file. If you need a GUI to view your db, you can use Table Plus, DBeaver, pgAdmin.
-
-Then, you will need to migrate the db by running:
+Migrate the database by running:
 ```bash
 bun db:migrate
-or
-bunx drizzle-kit migrate
 ```
-And then, seed the neccessary data into the db:
+And then, seed the necessary data into the database:
 ```bash
 bun db:seed
 ```

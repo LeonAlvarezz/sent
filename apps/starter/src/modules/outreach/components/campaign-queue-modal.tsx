@@ -175,7 +175,7 @@ export function CampaignQueueModal({
             </div>
           ) : (
             <table className="w-full text-xs text-left">
-              <thead className="bg-accent/50 border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider sticky top-0 backdrop-blur-xs">
+              <thead className="bg-accent border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider sticky top-0">
                 <tr>
                   <th className="py-2 px-3">Recipient</th>
                   <th className="py-2 px-3">Subject</th>

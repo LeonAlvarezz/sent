@@ -81,6 +81,34 @@ To prevent recurring design inconsistencies across views:
 
 ---
 
+## 4. Modal, Dialog & Sheet Animation Performance Protocol (MANDATORY)
+
+To prevent frame drops, animation lag, GPU compositing bottlenecks, and thread freezing during modal, sheet, and popover animations:
+
+### Rules of Engagement
+
+1. **Zero Full-Viewport `backdrop-filter: blur(...)` on Animated Overlays**:
+   - **NEVER** apply `backdrop-blur-*` or CSS `backdrop-filter: blur(...)` to `fixed inset-0` modal backdrops with opacity animations.
+   - Animating `opacity` on full-screen blurred elements forces the GPU to recalculate heavy 2D Gaussian blur convolutions across millions of screen pixels 60–120 times/sec.
+   - **Fix:** Always use a clean semi-transparent background (e.g. `bg-black/60` or `bg-black/50`) with `transition-opacity duration-200 ease-out`.
+
+2. **No Transform Centering Clashes with Keyframe Animations**:
+   - **NEVER** combine CSS keyframe utility animations (e.g. Radix `animate-in`, `fade-in-0`, `zoom-in-95`, `slide-in-*`) directly on an element centered with `fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2` or `absolute left-1/2 -translate-x-1/2`.
+   - Keyframe transforms override the centering transform coordinates on every frame, forcing matrix recalculations on CPU/GPU and causing stutter or jumping.
+   - **Fix:** Either use Flexbox centering container wrappers (`<div className="fixed inset-0 flex items-center justify-center">`) or decouple positioning into an outer positioning wrapper and an inner animated panel.
+
+3. **Use Native Base UI / Headless UI Transition States**:
+   - When using Base UI (`@base-ui/react`), manage presence using native CSS transitions with `data-[starting-style]` and `data-[ending-style]` attributes.
+   - When using Headless UI (`@headlessui/react`), use `transition` with `data-closed:scale-95 data-closed:opacity-0` and `transition-all duration-200`.
+   - Avoid combining mismatched CSS `@keyframes` with CSS transitions, which breaks presence tracking (`Element.getAnimations()`) and can cause premature unmounting.
+
+4. **Defer Heavy Dropdown & Select Options inside Modals**:
+   - **NEVER** mount hundreds of unvirtualized `<SelectItem>` or option elements (e.g., country codes, timezones, phone prefixes) into the DOM while the dropdown is closed.
+   - Synchronously rendering 200–500+ DOM nodes inside a modal freezes the main JavaScript thread for 300–800ms before animations can execute.
+   - **Fix:** Only render dropdown options when open (`{open && options.map(...)}`) or leverage `@z3/admin-core`'s virtual windowing in `<Select>`.
+
+---
+
 ## Workspace Quick Reference Map
 
 ### UI Components (`@z3/admin-core`)

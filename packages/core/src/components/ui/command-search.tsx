@@ -301,7 +301,7 @@ export function CommandSearch({
       <Dialog onClose={handleClose} className="relative z-50">
         <DialogBackdrop
           transition
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-200 data-closed:opacity-0"
+          className="fixed inset-0 bg-black/60 transition-opacity duration-200 data-closed:opacity-0"
         />
 
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16 sm:pt-24">
