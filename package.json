@@ -22,7 +22,8 @@
     "db:reset:remote": "bun --cwd apps/backend db:reset:remote",
     "db:seed": "bun --cwd apps/backend db:seed",
     "db:seed:remote": "bun --cwd apps/backend db:seed:remote",
-    "db:gen": "bun --cwd apps/backend db:gen"
+    "clean": "node scripts/clean.mjs",
+    "clean:all": "node scripts/clean.mjs --all"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
