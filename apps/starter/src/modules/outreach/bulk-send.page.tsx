@@ -206,7 +206,7 @@ export function BulkSendPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-5xl mx-auto w-full">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>

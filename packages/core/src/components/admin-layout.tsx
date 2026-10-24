@@ -63,7 +63,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           {enableTabs && (
             <WorkspaceTabs navGroups={effectiveNavGroups} navItems={effectiveNavItems} />
           )}
-          <main className="flex-1 flex flex-col md:p-6 pb-20 md:pb-6 overflow-y-auto">
+          <main className="flex-1 flex flex-col p-4 md:p-6 pb-20 md:pb-6 overflow-y-auto">
             {children}
           </main>
         </div>

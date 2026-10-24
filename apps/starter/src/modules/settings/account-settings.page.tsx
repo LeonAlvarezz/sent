@@ -9,7 +9,7 @@ export function AccountSettingsPage() {
   const sessionQuery = useSessionQuery();
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Account Settings

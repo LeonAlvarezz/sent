@@ -12,7 +12,7 @@ export function PageLoadingSkeleton({ className }: PageLoadingSkeletonProps) {
       aria-busy="true"
       aria-label="Loading page content"
       className={cn(
-        "flex flex-col gap-6 p-6 max-w-7xl mx-auto w-full animate-fade-in",
+        "flex flex-col gap-6 max-w-7xl mx-auto w-full animate-fade-in",
         className,
       )}
     >
